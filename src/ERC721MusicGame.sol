@@ -35,7 +35,7 @@ import {ERC721DropStorageV1} from "./storage/ERC721DropStorageV1.sol";
  * @author iain@zora.co (modified by sw33ts.eth)
  *
  */
-contract ERC721Drop is
+contract ERC721MusicGame is
     ERC721AUpgradeable,
     IERC2981Upgradeable,
     ReentrancyGuardUpgradeable,

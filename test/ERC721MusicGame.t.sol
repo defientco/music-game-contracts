@@ -6,7 +6,7 @@ import {DSTest} from "ds-test/test.sol";
 import {IERC721AUpgradeable} from "erc721a-upgradeable/IERC721AUpgradeable.sol";
 
 import {IERC721Drop} from "../src/interfaces/IERC721Drop.sol";
-import {ERC721Drop} from "../src/ERC721Drop.sol";
+import {ERC721MusicGame} from "../src/ERC721MusicGame.sol";
 import {DummyMetadataRenderer} from "./utils/DummyMetadataRenderer.sol";
 import {MockUser} from "./utils/MockUser.sol";
 import {IMetadataRenderer} from "../src/interfaces/IMetadataRenderer.sol";
@@ -14,7 +14,7 @@ import {FactoryUpgradeGate} from "../src/FactoryUpgradeGate.sol";
 import {ERC721DropProxy} from "../src/ERC721DropProxy.sol";
 import {ChillToken} from "../src/utils/ChillToken.sol";
 
-contract ERC721DropTest is DSTest {
+contract ERC721MusicGameTest is DSTest {
     /// @notice Event emitted when the funds are withdrawn from the minting contract
     /// @param withdrawnBy address that issued the withdraw
     /// @param withdrawnTo address that the funds were withdrawn to
@@ -25,7 +25,7 @@ contract ERC721DropTest is DSTest {
         uint256 amount
     );
 
-    ERC721Drop zoraNFTBase;
+    ERC721MusicGame zoraNFTBase;
     ChillToken ct;
     MockUser mockUser;
     Vm public constant vm = Vm(HEVM_ADDRESS);
@@ -76,11 +76,11 @@ contract ERC721DropTest is DSTest {
         vm.prank(DEFAULT_ZORA_DAO_ADDRESS);
         factoryUpgradeGate = new FactoryUpgradeGate(UPGRADE_GATE_ADMIN_ADDRESS);
         vm.prank(DEFAULT_ZORA_DAO_ADDRESS);
-        impl = address(new ERC721Drop(address(0x1234)));
+        impl = address(new ERC721MusicGame(address(0x1234)));
         address payable newDrop = payable(
             address(new ERC721DropProxy(impl, ""))
         );
-        zoraNFTBase = ERC721Drop(newDrop);
+        zoraNFTBase = ERC721MusicGame(newDrop);
         ct = new ChillToken(address(1));
         vm.prank(address(1));
         ct.mint(address(1), type(uint64).max);
