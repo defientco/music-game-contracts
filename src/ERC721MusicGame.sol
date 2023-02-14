@@ -56,9 +56,6 @@ contract ERC721MusicGame is
     bytes32 public immutable MINTER_ROLE = keccak256("MINTER");
     bytes32 public immutable SALES_MANAGER_ROLE = keccak256("SALES_MANAGER");
 
-    /// @dev ZORA V3 transfer helper address for auto-approval
-    address internal immutable zoraERC721TransferHelper;
-
     /// @notice Max royalty BPS
     uint16 constant MAX_ROYALTY_BPS = 50_00;
 
@@ -134,13 +131,6 @@ contract ERC721MusicGame is
     }
 
     /// @notice Global constructor – these variables will not change with further proxy deploys
-    /// @dev Marked as an initializer to prevent storage being used of base implementation. Can only be init'd by a proxy.
-    /// @param _zoraERC721TransferHelper Transfer helper
-    constructor(address _zoraERC721TransferHelper) initializer {
-        zoraERC721TransferHelper = _zoraERC721TransferHelper;
-    }
-
-    ///  @dev Create a new drop contract
     ///  @param _contractName Contract name
     ///  @param _contractSymbol Contract symbol
     ///  @param _initialOwner User that owns and can mint the edition, gets royalty and sales payouts and can update the base url if needed.
@@ -149,8 +139,7 @@ contract ERC721MusicGame is
     ///  @param _royaltyBPS BPS of the royalty set on the contract. Can be 0 for no royalty.
     ///  @param _salesConfig New sales config to set upon init
     ///  @param _metadataRenderer Renderer contract to use
-    ///  @param _metadataRendererInit Renderer data initial contract
-    function initialize(
+    constructor(
         string memory _contractName,
         string memory _contractSymbol,
         address _initialOwner,
@@ -158,9 +147,8 @@ contract ERC721MusicGame is
         uint64 _editionSize,
         uint16 _royaltyBPS,
         ERC20SalesConfiguration memory _salesConfig,
-        IMetadataRenderer _metadataRenderer,
-        bytes memory _metadataRendererInit
-    ) public initializer {
+        IMetadataRenderer _metadataRenderer
+    ) initializer {
         // Setup ERC721A
         __ERC721A_init(_contractName, _contractSymbol);
         // Setup access control
@@ -184,7 +172,6 @@ contract ERC721MusicGame is
         config.metadataRenderer = _metadataRenderer;
         config.royaltyBPS = _royaltyBPS;
         config.fundsRecipient = _fundsRecipient;
-        _metadataRenderer.initializeWithData(_metadataRendererInit);
     }
 
     /// @dev Getter for admin role associated with the contract to handle metadata
@@ -285,9 +272,6 @@ contract ERC721MusicGame is
         override(ERC721AUpgradeable)
         returns (bool)
     {
-        if (operator == zoraERC721TransferHelper) {
-            return true;
-        }
         return super.isApprovedForAll(nftOwner, operator);
     }
 
