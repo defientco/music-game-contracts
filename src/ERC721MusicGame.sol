@@ -394,6 +394,21 @@ contract ERC721MusicGame is
         _mintNFTs(_msgSender(), quantity);
         uint256 firstMintedTokenId = _lastMintedTokenId() - quantity;
 
+        // Set metadata for music game
+        // data format: description, imageURI, animationURI, tokenId
+        (
+            string memory description,
+            string memory imageURI,
+            string memory animationURI
+        ) = abi.decode(initialData, (string, string, string));
+        bytes memory data = abi.encode(
+            description,
+            imageURI,
+            animationURI,
+            _lastMintedTokenId()
+        );
+        config.metadataRenderer.initializeWithData(data);
+
         emit IERC721Drop.Sale({
             to: _msgSender(),
             quantity: quantity,

@@ -8,6 +8,7 @@ import {IERC721AUpgradeable} from "erc721a-upgradeable/IERC721AUpgradeable.sol";
 import {IERC721Drop} from "../src/interfaces/IERC721Drop.sol";
 import {ERC721MusicGame} from "../src/ERC721MusicGame.sol";
 import {DummyMetadataRenderer} from "./utils/DummyMetadataRenderer.sol";
+import {MusicGameMetadataRenderer} from "../src/metadata/MusicGameMetadataRenderer.sol";
 import {MockUser} from "./utils/MockUser.sol";
 import {IMetadataRenderer} from "../src/interfaces/IMetadataRenderer.sol";
 import {FactoryUpgradeGate} from "../src/FactoryUpgradeGate.sol";
@@ -30,6 +31,8 @@ contract ERC721MusicGameTest is DSTest {
     MockUser mockUser;
     Vm public constant vm = Vm(HEVM_ADDRESS);
     DummyMetadataRenderer public dummyRenderer = new DummyMetadataRenderer();
+    MusicGameMetadataRenderer public musicGameRenderer =
+        new MusicGameMetadataRenderer();
     FactoryUpgradeGate public factoryUpgradeGate;
     address public constant DEFAULT_OWNER_ADDRESS = address(0x23499);
     address payable public constant DEFAULT_FUNDS_RECIPIENT_ADDRESS =
@@ -166,6 +169,60 @@ contract ERC721MusicGameTest is DSTest {
             "owner is wrong for new minted token"
         );
         assertEq(address(zoraNFTBase).balance, amount);
+    }
+
+    function test_Purchase_setsMetadata(uint64 amount)
+        public
+        setupZoraNFTBase(10)
+    {
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        zoraNFTBase.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: amount,
+            maxSalePurchasePerAddress: 2,
+            presaleMerkleRoot: bytes32(0)
+        });
+
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        zoraNFTBase.setMetadataRenderer(musicGameRenderer, "");
+        assertEq(
+            address(zoraNFTBase.metadataRenderer()),
+            address(musicGameRenderer)
+        );
+
+        vm.deal(address(456), uint256(amount) * 2);
+        vm.prank(address(456));
+
+        bytes memory initData = abi.encode(
+            "Description for metadata",
+            "https://example.com/image.png",
+            "https://example.com/animation.mp4"
+        );
+
+        zoraNFTBase.purchase{value: amount}(1, initData);
+
+        MusicGameMetadataRenderer.TokenEditionInfo
+            memory info = musicGameRenderer.tokenInfos(address(zoraNFTBase), 1);
+        assertEq(info.description, "Description for metadata");
+        assertEq(info.animationURI, "https://example.com/animation.mp4");
+        assertEq(info.imageURI, "https://example.com/image.png");
+
+        initData = abi.encode(
+            "Description for metadata2",
+            "https://example.com/image2.png",
+            "https://example.com/animation2.mp4"
+        );
+
+        zoraNFTBase.purchase{value: amount}(1, initData);
+
+        info = musicGameRenderer.tokenInfos(address(zoraNFTBase), 2);
+        assertEq(info.description, "Description for metadata2");
+        assertEq(info.animationURI, "https://example.com/animation2.mp4");
+        assertEq(info.imageURI, "https://example.com/image2.png");
     }
 
     function test_PurchaseERC20_Revert_InsufficientAllowance(uint64 amount)
