@@ -355,7 +355,7 @@ contract ERC721Drop is
       @dev This allows the user to purchase a edition edition
            at the given price in the contract.
      */
-    function purchase(uint256 quantity)
+    function purchase(uint256 quantity, bytes memory initialData)
         external
         payable
         nonReentrant

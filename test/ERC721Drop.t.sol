@@ -150,7 +150,13 @@ contract ERC721DropTest is DSTest {
 
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
-        zoraNFTBase.purchase{value: amount}(1);
+
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+
+        zoraNFTBase.purchase{value: amount}(1, initData);
 
         assertEq(zoraNFTBase.saleDetails().maxSupply, 10);
         assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
@@ -182,11 +188,15 @@ contract ERC721DropTest is DSTest {
 
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
         if (amount > 0) {
             vm.expectRevert("ERC20: insufficient allowance");
-            zoraNFTBase.purchase(1);
+            zoraNFTBase.purchase(1, initData);
         } else {
-            zoraNFTBase.purchase(1);
+            zoraNFTBase.purchase(1, initData);
             require(
                 zoraNFTBase.ownerOf(1) == address(456),
                 "owner is wrong for new minted token"
@@ -216,7 +226,12 @@ contract ERC721DropTest is DSTest {
         vm.prank(address(1));
         ct.approve(address(zoraNFTBase), type(uint256).max);
         vm.prank(address(1));
-        zoraNFTBase.purchase(1);
+
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        zoraNFTBase.purchase(1, initData);
         require(
             zoraNFTBase.ownerOf(1) == address(1),
             "owner is wrong for new minted token"
@@ -246,10 +261,15 @@ contract ERC721DropTest is DSTest {
 
         assertTrue(!zoraNFTBase.saleDetails().publicSaleActive);
 
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+
         vm.deal(address(456), 1 ether);
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
-        zoraNFTBase.purchase{value: 0.1 ether}(1);
+        zoraNFTBase.purchase{value: 0.1 ether}(1, initData);
 
         assertEq(zoraNFTBase.saleDetails().maxSupply, 10);
         assertEq(zoraNFTBase.saleDetails().totalMinted, 0);
@@ -273,7 +293,7 @@ contract ERC721DropTest is DSTest {
         assertTrue(!zoraNFTBase.saleDetails().presaleActive);
 
         vm.prank(address(456));
-        zoraNFTBase.purchase{value: 0.1 ether}(1);
+        zoraNFTBase.purchase{value: 0.1 ether}(1, initData);
 
         assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
         assertEq(zoraNFTBase.ownerOf(1), address(456));
@@ -292,9 +312,13 @@ contract ERC721DropTest is DSTest {
 
     function test_MintWrongValue() public setupZoraNFTBase(10) {
         vm.deal(address(456), 1 ether);
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
-        zoraNFTBase.purchase{value: 0.12 ether}(1);
+        zoraNFTBase.purchase{value: 0.12 ether}(1, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
         zoraNFTBase.setSaleConfiguration({
             erc20PaymentToken: address(0),
@@ -313,7 +337,7 @@ contract ERC721DropTest is DSTest {
                 0.15 ether
             )
         );
-        zoraNFTBase.purchase{value: 0.12 ether}(1);
+        zoraNFTBase.purchase{value: 0.12 ether}(1, initData);
     }
 
     function test_Withdraw(uint128 amount) public setupZoraNFTBase(10) {
@@ -357,9 +381,16 @@ contract ERC721DropTest is DSTest {
             maxSalePurchasePerAddress: limit,
             presaleMerkleRoot: bytes32(0)
         });
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
         vm.deal(address(456), 1_000_000 ether);
         vm.prank(address(456));
-        zoraNFTBase.purchase{value: 0.1 ether * uint256(limit)}(limit);
+        zoraNFTBase.purchase{value: 0.1 ether * uint256(limit)}(
+            limit,
+            initData
+        );
 
         assertEq(zoraNFTBase.saleDetails().totalMinted, limit);
 
@@ -367,7 +398,8 @@ contract ERC721DropTest is DSTest {
         vm.prank(address(444));
         vm.expectRevert(IERC721Drop.Purchase_TooManyForAddress.selector);
         zoraNFTBase.purchase{value: 0.1 ether * (uint256(limit) + 1)}(
-            uint256(limit) + 1
+            uint256(limit) + 1,
+            initData
         );
 
         assertEq(zoraNFTBase.saleDetails().totalMinted, limit);
@@ -450,7 +482,11 @@ contract ERC721DropTest is DSTest {
             presaleMerkleRoot: bytes32(0),
             maxSalePurchasePerAddress: 5
         });
-        zoraNFTBase.purchase{value: 0.6 ether}(3);
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
         zoraNFTBase.adminMint(address(0x1234), 2);
         vm.prank(DEFAULT_OWNER_ADDRESS);
@@ -475,7 +511,11 @@ contract ERC721DropTest is DSTest {
             presaleMerkleRoot: bytes32(0),
             maxSalePurchasePerAddress: 10
         });
-        zoraNFTBase.purchase{value: 0.6 ether}(3);
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
         zoraNFTBase.adminMint(address(0x1234), 2);
         vm.prank(DEFAULT_OWNER_ADDRESS);
@@ -484,7 +524,7 @@ contract ERC721DropTest is DSTest {
         vm.prank(DEFAULT_OWNER_ADDRESS);
         zoraNFTBase.adminMint(address(0x1234), 2);
         vm.expectRevert(IERC721Drop.Mint_SoldOut.selector);
-        zoraNFTBase.purchase{value: 0.6 ether}(3);
+        zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
     }
 
     function test_AdminMint() public setupZoraNFTBase(10) {
@@ -526,10 +566,15 @@ contract ERC721DropTest is DSTest {
             presaleMerkleRoot: bytes32(0)
         });
 
+        bytes memory initData = abi.encode(
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+
         vm.deal(address(456), uint256(1) * 2);
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Mint_SoldOut.selector);
-        zoraNFTBase.purchase{value: 1}(1);
+        zoraNFTBase.purchase{value: 1}(1, initData);
     }
 
     // test Admin airdrop

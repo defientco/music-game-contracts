@@ -4,17 +4,14 @@ pragma solidity ^0.8.10;
 import {IMetadataRenderer} from "../interfaces/IMetadataRenderer.sol";
 
 /**
-
- ________   _____   ____    ______      ____
-/\_____  \ /\  __`\/\  _`\ /\  _  \    /\  _`\
-\/____//'/'\ \ \/\ \ \ \L\ \ \ \L\ \   \ \ \/\ \  _ __   ___   _____     ____
-     //'/'  \ \ \ \ \ \ ,  /\ \  __ \   \ \ \ \ \/\`'__\/ __`\/\ '__`\  /',__\
-    //'/'___ \ \ \_\ \ \ \\ \\ \ \/\ \   \ \ \_\ \ \ \//\ \L\ \ \ \L\ \/\__, `\
-    /\_______\\ \_____\ \_\ \_\ \_\ \_\   \ \____/\ \_\\ \____/\ \ ,__/\/\____/
-    \/_______/ \/_____/\/_/\/ /\/_/\/_/    \/___/  \/_/ \/___/  \ \ \/  \/___/
-                                                                 \ \_\
-                                                                  \/_/
-
+         )     (   (            (   (   
+      ( /( (   )\  )\       (   )\  )\  
+  (   )\()))\ ((_)((_)`  )  )\ ((_)((_) 
+  )\ ((_)\((_) _   _  /(/( ((_) _   _   
+ ((_)| |(_)(_)| | | |((_)_\ (_)| | | |  
+/ _| | ' \ | || | | || '_ \)| || | | |  
+\__| |_||_||_||_| |_|| .__/ |_||_| |_|  
+                     |_|                
 */
 
 /// @notice Interface for ZORA Drops contract
@@ -222,8 +219,12 @@ interface IERC721Drop {
 
     /// @notice External purchase function (payable in eth)
     /// @param quantity to purchase
+    /// @param initialData passed in for initialization
     /// @return first minted token ID
-    function purchase(uint256 quantity) external payable returns (uint256);
+    function purchase(uint256 quantity, bytes memory initialData)
+        external
+        payable
+        returns (uint256);
 
     /// @notice External purchase presale function (takes a merkle proof and matches to root) (payable in eth)
     /// @param quantity to purchase
