@@ -509,6 +509,29 @@ contract ERC721MusicGameTest is DSTest {
         zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
     }
 
+    function test_BYTES_BYTES_BYTES()
+        public
+        setupZoraNFTBase(type(uint64).max)
+    {
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        zoraNFTBase.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: 0.2 ether,
+            presaleMerkleRoot: bytes32(0),
+            maxSalePurchasePerAddress: 10
+        });
+        bytes memory initData = abi.encode(
+            "Music Game by CRE8ORS",
+            "ipfs://bafybeie4aujrsejizhllu62bzpc7ptiulnncsa4eqizd2ogea457io7lym/mickey mouse as a chef cutting mushrooms in the kithcen.png?",
+            "ipfs://bafybeigweadrkf2rcy3kjgtvn6ixedpbcwkll2uek6pl4ub7zfzfpxutxy/6.mp3?id=0"
+        );
+        emit log_bytes(initData);
+    }
+
     function test_AdminMint() public setupZoraNFTBase(10) {
         address minter = address(0x32402);
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
