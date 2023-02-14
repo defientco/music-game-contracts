@@ -37,8 +37,9 @@ contract MusicGameMetadataRenderer is
 
     /// @notice Event for a new edition initialized
     /// @dev admin function indexer feedback
-    event EditionInitialized(
+    event NewMusicInitialized(
         address indexed target,
+        uint256 tokenId,
         string description,
         string imageURI,
         string animationURI
@@ -53,19 +54,30 @@ contract MusicGameMetadataRenderer is
     );
 
     /// @notice Token information mapping storage
-    mapping(address => TokenEditionInfo) public tokenInfos;
+    mapping(address => mapping(uint256 => TokenEditionInfo))
+        internal _tokenInfos;
+
+    function tokenInfos(address target, uint256 tokenId)
+        public
+        view
+        returns (TokenEditionInfo memory)
+    {
+        return _tokenInfos[target][tokenId];
+    }
 
     /// @notice Update media URIs
     /// @param target target for contract to update metadata for
+    /// @param tokenId target token to update metadata for
     /// @param imageURI new image uri address
     /// @param animationURI new animation uri address
     function updateMediaURIs(
         address target,
+        uint256 tokenId,
         string memory imageURI,
         string memory animationURI
     ) external requireSenderAdmin(target) {
-        tokenInfos[target].imageURI = imageURI;
-        tokenInfos[target].animationURI = animationURI;
+        _tokenInfos[target][tokenId].imageURI = imageURI;
+        _tokenInfos[target][tokenId].animationURI = animationURI;
         emit MediaURIsUpdated({
             target: target,
             sender: msg.sender,
@@ -76,12 +88,14 @@ contract MusicGameMetadataRenderer is
 
     /// @notice Admin function to update description
     /// @param target target description
+    /// @param tokenId target tokenId
     /// @param newDescription new description
-    function updateDescription(address target, string memory newDescription)
-        external
-        requireSenderAdmin(target)
-    {
-        tokenInfos[target].description = newDescription;
+    function updateDescription(
+        address target,
+        uint256 tokenId,
+        string memory newDescription
+    ) external requireSenderAdmin(target) {
+        _tokenInfos[target][tokenId].description = newDescription;
 
         emit DescriptionUpdated({
             target: target,
@@ -93,20 +107,22 @@ contract MusicGameMetadataRenderer is
     /// @notice Default initializer for edition data from a specific contract
     /// @param data data to init with
     function initializeWithData(bytes memory data) external {
-        // data format: description, imageURI, animationURI
+        // data format: description, imageURI, animationURI, tokenId
         (
             string memory description,
             string memory imageURI,
-            string memory animationURI
-        ) = abi.decode(data, (string, string, string));
+            string memory animationURI,
+            uint256 tokenId
+        ) = abi.decode(data, (string, string, string, uint256));
 
-        tokenInfos[msg.sender] = TokenEditionInfo({
+        _tokenInfos[msg.sender][tokenId] = TokenEditionInfo({
             description: description,
             imageURI: imageURI,
             animationURI: animationURI
         });
-        emit EditionInitialized({
+        emit NewMusicInitialized({
             target: msg.sender,
+            tokenId: tokenId,
             description: description,
             imageURI: imageURI,
             animationURI: animationURI
@@ -117,7 +133,7 @@ contract MusicGameMetadataRenderer is
     /// @return contract uri (if set)
     function contractURI() external view override returns (string memory) {
         address target = msg.sender;
-        TokenEditionInfo storage editionInfo = tokenInfos[target];
+        TokenEditionInfo storage editionInfo = _tokenInfos[target][1];
         IERC721Drop.Configuration memory config = DropConfigGetter(target)
             .config();
 
@@ -142,7 +158,7 @@ contract MusicGameMetadataRenderer is
     {
         address target = msg.sender;
 
-        TokenEditionInfo memory info = tokenInfos[target];
+        TokenEditionInfo memory info = _tokenInfos[target][tokenId];
         IERC721Drop media = IERC721Drop(target);
 
         uint256 maxSupply = media.saleDetails().maxSupply;

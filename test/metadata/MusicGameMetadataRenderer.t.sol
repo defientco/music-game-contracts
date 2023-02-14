@@ -59,22 +59,55 @@ contract MusicGameMetadataRendererTest is DSTest {
     MusicGameMetadataRenderer public editionRenderer =
         new MusicGameMetadataRenderer();
 
-    function test_EditionMetadataInits() public {
+    /// @notice Storage for token edition information
+    struct TokenEditionInfo {
+        string description;
+        string imageURI;
+        string animationURI;
+    }
+
+    function test_MusicGameMetadataInits() public {
         vm.startPrank(address(0x123));
         bytes memory data = abi.encode(
             "Description for metadata",
             "https://example.com/image.png",
-            "https://example.com/animation.mp4"
+            "https://example.com/animation.mp4",
+            1
         );
         editionRenderer.initializeWithData(data);
-        (
-            string memory description,
-            string memory imageURI,
-            string memory animationURI
-        ) = editionRenderer.tokenInfos(address(0x123));
-        assertEq(description, "Description for metadata");
-        assertEq(animationURI, "https://example.com/animation.mp4");
-        assertEq(imageURI, "https://example.com/image.png");
+        MusicGameMetadataRenderer.TokenEditionInfo memory info = editionRenderer
+            .tokenInfos(address(0x123), 1);
+        assertEq(info.description, "Description for metadata");
+        assertEq(info.animationURI, "https://example.com/animation.mp4");
+        assertEq(info.imageURI, "https://example.com/image.png");
+    }
+
+    function test_MusicGameMetadataInitsDifferentTokens() public {
+        vm.startPrank(address(0x123));
+        bytes memory data = abi.encode(
+            "Description for metadata",
+            "https://example.com/image.png",
+            "https://example.com/animation.mp4",
+            1
+        );
+        bytes memory data2 = abi.encode(
+            "Description for metadata 2",
+            "https://example.com/image2.png",
+            "https://example.com/animation2.mp4",
+            2
+        );
+        editionRenderer.initializeWithData(data);
+        editionRenderer.initializeWithData(data2);
+        MusicGameMetadataRenderer.TokenEditionInfo memory info = editionRenderer
+            .tokenInfos(address(0x123), 1);
+        MusicGameMetadataRenderer.TokenEditionInfo
+            memory info2 = editionRenderer.tokenInfos(address(0x123), 2);
+        assertEq(info.description, "Description for metadata");
+        assertEq(info.animationURI, "https://example.com/animation.mp4");
+        assertEq(info.imageURI, "https://example.com/image.png");
+        assertEq(info2.description, "Description for metadata 2");
+        assertEq(info2.animationURI, "https://example.com/animation2.mp4");
+        assertEq(info2.imageURI, "https://example.com/image2.png");
     }
 
     function test_UpdateDescriptionAllowed() public {
@@ -86,12 +119,11 @@ contract MusicGameMetadataRendererTest is DSTest {
         );
         editionRenderer.initializeWithData(data);
 
-        editionRenderer.updateDescription(address(0x123), "new description");
+        editionRenderer.updateDescription(address(0x123), 1, "new description");
 
-        (string memory updatedDescription, , ) = editionRenderer.tokenInfos(
-            address(0x123)
-        );
-        assertEq(updatedDescription, "new description");
+        MusicGameMetadataRenderer.TokenEditionInfo memory info = editionRenderer
+            .tokenInfos(address(0x123), 1);
+        assertEq(info.description, "new description");
     }
 
     function test_UpdateDescriptionNotAllowed() public {
@@ -106,7 +138,7 @@ contract MusicGameMetadataRendererTest is DSTest {
         vm.stopPrank();
 
         vm.expectRevert(MetadataRenderAdminCheck.Access_OnlyAdmin.selector);
-        editionRenderer.updateDescription(address(base), "new description");
+        editionRenderer.updateDescription(address(base), 1, "new description");
     }
 
     function test_AllowMetadataURIUpdates() public {
@@ -114,24 +146,23 @@ contract MusicGameMetadataRendererTest is DSTest {
         bytes memory data = abi.encode(
             "Description for metadata",
             "https://example.com/image.png",
-            "https://example.com/animation.mp4"
+            "https://example.com/animation.mp4",
+            1
         );
         editionRenderer.initializeWithData(data);
 
         editionRenderer.updateMediaURIs(
             address(0x123),
+            1,
             "https://example.com/image.png",
             "https://example.com/animation.mp4"
         );
         editionRenderer.initializeWithData(data);
-        (
-            string memory description,
-            string memory imageURI,
-            string memory animationURI
-        ) = editionRenderer.tokenInfos(address(0x123));
-        assertEq(description, "Description for metadata");
-        assertEq(animationURI, "https://example.com/animation.mp4");
-        assertEq(imageURI, "https://example.com/image.png");
+        MusicGameMetadataRenderer.TokenEditionInfo memory info = editionRenderer
+            .tokenInfos(address(0x123), 1);
+        assertEq(info.description, "Description for metadata");
+        assertEq(info.animationURI, "https://example.com/animation.mp4");
+        assertEq(info.imageURI, "https://example.com/image.png");
     }
 
     function test_MetadatURIUpdateNotAllowed() public {
@@ -140,7 +171,8 @@ contract MusicGameMetadataRendererTest is DSTest {
         bytes memory data = abi.encode(
             "Description for metadata",
             "https://example.com/image.png",
-            "https://example.com/animation.mp4"
+            "https://example.com/animation.mp4",
+            1
         );
         editionRenderer.initializeWithData(data);
         vm.stopPrank();
@@ -149,6 +181,7 @@ contract MusicGameMetadataRendererTest is DSTest {
         vm.expectRevert(MetadataRenderAdminCheck.Access_OnlyAdmin.selector);
         editionRenderer.updateMediaURIs(
             address(base),
+            1,
             "https://example.com/image.png",
             "https://example.com/animation.mp4"
         );
@@ -161,7 +194,7 @@ contract MusicGameMetadataRendererTest is DSTest {
         });
         vm.startPrank(address(mock));
         editionRenderer.initializeWithData(
-            abi.encode("Description", "image", "animation")
+            abi.encode("Description", "image", "animation", 1)
         );
         // '{"name": "MOCK NAME 1/100", "description": "Description", "image": "image", "animation_url": "animation", "properties": {"number": 1, "name": "MOCK NAME"}}'
         assertEq(
@@ -177,7 +210,7 @@ contract MusicGameMetadataRendererTest is DSTest {
         });
         vm.startPrank(address(mock));
         editionRenderer.initializeWithData(
-            abi.encode("Description", "image", "animation")
+            abi.encode("Description", "image", "animation", 1)
         );
         // {"name": "MOCK NAME 1", "description": "Description", "image": "image", "animation_url": "animation", "properties": {"number": 1, "name": "MOCK NAME"}}
         assertEq(
@@ -193,7 +226,7 @@ contract MusicGameMetadataRendererTest is DSTest {
         });
         vm.startPrank(address(mock));
         editionRenderer.initializeWithData(
-            abi.encode("Description", "ipfs://image", "ipfs://animation")
+            abi.encode("Description", "ipfs://image", "ipfs://animation", 1)
         );
         assertEq(
             "data:application/json;base64,eyJuYW1lIjogIk1PQ0sgTkFNRSIsICJkZXNjcmlwdGlvbiI6ICJEZXNjcmlwdGlvbiIsICJzZWxsZXJfZmVlX2Jhc2lzX3BvaW50cyI6IDEwMDAsICJmZWVfcmVjaXBpZW50IjogIjB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDE2MyIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2UifQ==",
