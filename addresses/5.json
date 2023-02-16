@@ -1,6 +1,4 @@
 {
-    "ERC721Drop": "0x904aCADf23B384fF511430Bdf5EB6912de143e5f",
-    "DropMetadataRenderer": "0x9022dfff27e858e36c87ae1acb7d9224e4bb6c63",
-    "EditionMetadataRenderer": "0x2b6D614263329705b93849f08C5704b13e0F7a92",
-    "ZoraNFTCreatorV1": "0x4799358aC609B9fb6967bEA045cB6BD1A7a3853c"
+    "MusicGameMetadataRenderer": "0x70c2c951e0Ab4dA22B42eDEa3fEB929e467058ED",
+    "ERC721MusicGame": "0x93350fAEa6dC6B1486d7313b44cA9Eac1927B2C4"
 }

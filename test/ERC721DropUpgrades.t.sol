@@ -6,7 +6,7 @@ import {DSTest} from "ds-test/test.sol";
 import {IERC721AUpgradeable} from "erc721a-upgradeable/IERC721AUpgradeable.sol";
 
 import {IERC721Drop} from "../src/interfaces/IERC721Drop.sol";
-import {ERC721Drop} from "../src/ERC721Drop.sol";
+import {ERC721MusicGame} from "../src/ERC721MusicGame.sol";
 import {DummyMetadataRenderer} from "./utils/DummyMetadataRenderer.sol";
 import {MockUser} from "./utils/MockUser.sol";
 import {IMetadataRenderer} from "../src/interfaces/IMetadataRenderer.sol";
@@ -14,7 +14,7 @@ import {FactoryUpgradeGate} from "../src/FactoryUpgradeGate.sol";
 import {ERC721DropProxy} from "../src/ERC721DropProxy.sol";
 
 contract ERC721DropTest is DSTest {
-    ERC721Drop zoraNFTBase;
+    ERC721MusicGame zoraNFTBase;
     MockUser mockUser;
     Vm public constant vm = Vm(HEVM_ADDRESS);
     DummyMetadataRenderer public dummyRenderer = new DummyMetadataRenderer();
