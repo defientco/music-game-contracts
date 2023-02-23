@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 /**
          )     (   (            (   (   
@@ -1036,6 +1036,21 @@ contract ERC721MusicGame is
         cre8ingTransfer = 2;
         safeTransferFrom(from, to, tokenId);
         cre8ingTransfer = 1;
+    }
+
+    /// @dev Block transfers while cre8ing.
+    function _beforeTokenTransfers(
+        address,
+        address,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal view override {
+        uint256 tokenId = startTokenId;
+        for (uint256 end = tokenId + quantity; tokenId < end; ++tokenId) {
+            if (cre8ingStarted[tokenId] != 0 && cre8ingTransfer != 2) {
+                revert Cre8ing_Cre8ing();
+            }
+        }
     }
 
     /// @notice Requires that msg.sender owns or is approved for the token.

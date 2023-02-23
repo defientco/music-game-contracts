@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 import {Cre8ing} from "../src/Cre8ing.sol";
@@ -97,202 +97,242 @@ contract Cre8ingTest is Test {
         ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
     }
 
-    // function test_toggleCre8ingRevert_Cre8ing_Cre8ingClosed()
-    //     public
-    //     setupERC721MusicGameNFTBase
-    // {
-    //     uint256 _tokenId = 1;
-    //     (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
-    //         .cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, false);
-    //     assertEq(current, 0);
-    //     assertEq(total, 0);
-    //     ERC721MusicGameNFTBase.purchase(1);
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.expectRevert(abi.encodeWithSignature("Cre8ing_Cre8ingClosed()"));
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    // }
+    function test_toggleCre8ingRevert_Cre8ing_Cre8ingClosed()
+        public
+        setupERC721MusicGameNFTBase
+    {
+        uint256 _tokenId = 1;
+        (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
+            .cre8ingPeriod(_tokenId);
+        assertTrue(!cre8ing);
+        assertEq(current, 0);
+        assertEq(total, 0);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.expectRevert(abi.encodeWithSignature("Cre8ing_Cre8ingClosed()"));
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+    }
 
-    // function test_toggleCre8ing() public setupERC721MusicGameNFTBase {
-    //     uint256 _tokenId = 1;
-    //     (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
-    //         .cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, false);
-    //     assertEq(current, 0);
-    //     assertEq(total, 0);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_toggleCre8ing() public setupERC721MusicGameNFTBase {
+        uint256 _tokenId = 1;
+        (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
+            .cre8ingPeriod(_tokenId);
+        assertTrue(!cre8ing);
+        assertEq(current, 0);
+        assertEq(total, 0);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     (cre8ing, current, total) = ERC721MusicGameNFTBase.cre8ingPeriod(
-    //         _tokenId
-    //     );
-    //     assertEq(cre8ing, true);
-    //     assertEq(current, 0);
-    //     assertEq(total, 0);
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        (cre8ing, current, total) = ERC721MusicGameNFTBase.cre8ingPeriod(
+            _tokenId
+        );
+        assertTrue(cre8ing);
+        assertEq(current, 0);
+        assertEq(total, 0);
+    }
 
-    // function test_blockCre8ingTransfer() public setupERC721MusicGameNFTBase {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_blockCre8ingTransfer() public setupERC721MusicGameNFTBase {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     vm.expectRevert(abi.encodeWithSignature("Cre8ing_Cre8ing()"));
-    //     ERC721MusicGameNFTBase.safeTransferFrom(
-    //         DEFAULT_CRE8OR_ADDRESS,
-    //         DEFAULT_OWNER_ADDRESS,
-    //         _tokenId
-    //     );
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        vm.expectRevert(abi.encodeWithSignature("Cre8ing_Cre8ing()"));
+        ERC721MusicGameNFTBase.safeTransferFrom(
+            DEFAULT_CRE8OR_ADDRESS,
+            DEFAULT_OWNER_ADDRESS,
+            _tokenId
+        );
+    }
 
-    // function test_safeTransferWhileCre8ing()
-    //     public
-    //     setupERC721MusicGameNFTBase
-    // {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_safeTransferWhileCre8ing()
+        public
+        setupERC721MusicGameNFTBase
+    {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     assertEq(
-    //         ERC721MusicGameNFTBase.ownerOf(_tokenId),
-    //         DEFAULT_CRE8OR_ADDRESS
-    //     );
-    //     ERC721MusicGameNFTBase.safeTransferWhileCre8ing(
-    //         DEFAULT_CRE8OR_ADDRESS,
-    //         DEFAULT_TRANSFER_ADDRESS,
-    //         _tokenId
-    //     );
-    //     assertEq(
-    //         ERC721MusicGameNFTBase.ownerOf(_tokenId),
-    //         DEFAULT_TRANSFER_ADDRESS
-    //     );
-    //     (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, true);
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        assertEq(
+            ERC721MusicGameNFTBase.ownerOf(_tokenId),
+            DEFAULT_CRE8OR_ADDRESS
+        );
+        ERC721MusicGameNFTBase.safeTransferWhileCre8ing(
+            DEFAULT_CRE8OR_ADDRESS,
+            DEFAULT_TRANSFER_ADDRESS,
+            _tokenId
+        );
+        assertEq(
+            ERC721MusicGameNFTBase.ownerOf(_tokenId),
+            DEFAULT_TRANSFER_ADDRESS
+        );
+        (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
+        assertTrue(cre8ing);
+    }
 
-    // function test_safeTransferWhileCre8ingRevert_Access_OnlyOwner()
-    //     public
-    //     setupERC721MusicGameNFTBase
-    // {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_safeTransferWhileCre8ingRevert_Access_OnlyOwner()
+        public
+        setupERC721MusicGameNFTBase
+    {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     assertEq(
-    //         ERC721MusicGameNFTBase.ownerOf(_tokenId),
-    //         DEFAULT_CRE8OR_ADDRESS
-    //     );
-    //     vm.startPrank(DEFAULT_TRANSFER_ADDRESS);
-    //     vm.expectRevert(abi.encodeWithSignature("Access_OnlyOwner()"));
-    //     ERC721MusicGameNFTBase.safeTransferWhileCre8ing(
-    //         DEFAULT_CRE8OR_ADDRESS,
-    //         DEFAULT_TRANSFER_ADDRESS,
-    //         _tokenId
-    //     );
-    //     assertEq(
-    //         ERC721MusicGameNFTBase.ownerOf(_tokenId),
-    //         DEFAULT_CRE8OR_ADDRESS
-    //     );
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        assertEq(
+            ERC721MusicGameNFTBase.ownerOf(_tokenId),
+            DEFAULT_CRE8OR_ADDRESS
+        );
+        vm.startPrank(DEFAULT_TRANSFER_ADDRESS);
+        vm.expectRevert(abi.encodeWithSignature("Access_OnlyOwner()"));
+        ERC721MusicGameNFTBase.safeTransferWhileCre8ing(
+            DEFAULT_CRE8OR_ADDRESS,
+            DEFAULT_TRANSFER_ADDRESS,
+            _tokenId
+        );
+        assertEq(
+            ERC721MusicGameNFTBase.ownerOf(_tokenId),
+            DEFAULT_CRE8OR_ADDRESS
+        );
+    }
 
-    // function test_expelFromWarehouseRevert_uncre8ed()
-    //     public
-    //     setupERC721MusicGameNFTBase
-    // {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_expelFromWarehouseRevert_uncre8ed()
+        public
+        setupERC721MusicGameNFTBase
+    {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.startPrank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     bytes32 role = cre8ingBase.EXPULSION_ROLE();
-    //     ERC721MusicGameNFTBase.grantRole(role, DEFAULT_OWNER_ADDRESS);
-    //     vm.expectRevert(
-    //         abi.encodeWithSignature("CRE8ING_NotCre8ing(uint256)", _tokenId)
-    //     );
-    //     ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
-    // }
+        vm.startPrank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        bytes32 role = cre8ingBase.EXPULSION_ROLE();
+        ERC721MusicGameNFTBase.grantRole(role, DEFAULT_OWNER_ADDRESS);
+        vm.expectRevert(
+            abi.encodeWithSignature("CRE8ING_NotCre8ing(uint256)", _tokenId)
+        );
+        ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
+    }
 
-    // function test_expelFromWarehouseRevert_AccessControl()
-    //     public
-    //     setupERC721MusicGameNFTBase
-    // {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_expelFromWarehouseRevert_AccessControl()
+        public
+        setupERC721MusicGameNFTBase
+    {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, true);
-    //     bytes32 role = cre8ingBase.EXPULSION_ROLE();
-    //     vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
-    //     vm.expectRevert(
-    //         abi.encodePacked(
-    //             "AccessControl: account ",
-    //             Strings.toHexString(DEFAULT_CRE8OR_ADDRESS),
-    //             " is missing role ",
-    //             Strings.toHexString(uint256(role), 32)
-    //         )
-    //     );
-    //     ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
-    //     (cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, true);
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
+        assertTrue(cre8ing);
+        bytes32 role = cre8ingBase.EXPULSION_ROLE();
+        vm.startPrank(DEFAULT_CRE8OR_ADDRESS);
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                Strings.toHexString(DEFAULT_CRE8OR_ADDRESS),
+                " is missing role ",
+                Strings.toHexString(uint256(role), 32)
+            )
+        );
+        ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
+        (cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
+        assertTrue(cre8ing);
+    }
 
-    // function test_expelFromWarehouse() public setupERC721MusicGameNFTBase {
-    //     uint256 _tokenId = 1;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.purchase(1);
+    function test_expelFromWarehouse() public setupERC721MusicGameNFTBase {
+        uint256 _tokenId = 1;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        ERC721MusicGameNFTBase.purchase(1, initData);
 
-    //     vm.prank(DEFAULT_OWNER_ADDRESS);
-    //     ERC721MusicGameNFTBase.setCre8ingOpen(true);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        ERC721MusicGameNFTBase.setCre8ingOpen(true);
 
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.prank(DEFAULT_CRE8OR_ADDRESS);
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    //     vm.startPrank(DEFAULT_OWNER_ADDRESS);
-    //     bytes32 role = ERC721MusicGameNFTBase.EXPULSION_ROLE();
-    //     ERC721MusicGameNFTBase.grantRole(role, DEFAULT_OWNER_ADDRESS);
-    //     (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, true);
-    //     ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
-    //     (cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, false);
-    // }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+        vm.startPrank(DEFAULT_OWNER_ADDRESS);
+        bytes32 role = ERC721MusicGameNFTBase.EXPULSION_ROLE();
+        ERC721MusicGameNFTBase.grantRole(role, DEFAULT_OWNER_ADDRESS);
+        (bool cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
+        assertTrue(cre8ing);
+        ERC721MusicGameNFTBase.expelFromWarehouse(_tokenId);
+        (cre8ing, , ) = ERC721MusicGameNFTBase.cre8ingPeriod(_tokenId);
+        assertTrue(!cre8ing);
+    }
 }

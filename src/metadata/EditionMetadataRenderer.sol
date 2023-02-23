@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 import {IMetadataRenderer} from "../interfaces/IMetadataRenderer.sol";
 import {IERC721Drop} from "../interfaces/IERC721Drop.sol";
@@ -9,7 +9,10 @@ import {NFTMetadataRenderer} from "../utils/NFTMetadataRenderer.sol";
 import {MetadataRenderAdminCheck} from "./MetadataRenderAdminCheck.sol";
 
 interface DropConfigGetter {
-    function config() external view returns (IERC721Drop.Configuration memory config);
+    function config()
+        external
+        view
+        returns (IERC721Drop.Configuration memory config);
 }
 
 /// @notice EditionMetadataRenderer for editions support
@@ -115,7 +118,8 @@ contract EditionMetadataRenderer is
     function contractURI() external view override returns (string memory) {
         address target = msg.sender;
         TokenEditionInfo storage editionInfo = tokenInfos[target];
-        IERC721Drop.Configuration memory config = DropConfigGetter(target).config();
+        IERC721Drop.Configuration memory config = DropConfigGetter(target)
+            .config();
 
         return
             NFTMetadataRenderer.encodeContractURIJSON({
