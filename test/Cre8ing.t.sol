@@ -81,21 +81,21 @@ contract Cre8ingTest is Test {
         );
     }
 
-    // function test_toggleCre8ingRevert_OwnerQueryForNonexistentToken(
-    //     uint256 _tokenId
-    // ) public setupERC721MusicGameNFTBase {
-    //     (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
-    //         .cre8ingPeriod(_tokenId);
-    //     assertEq(cre8ing, false);
-    //     assertEq(current, 0);
-    //     assertEq(total, 0);
-    //     uint256[] memory tokenIds = new uint256[](1);
-    //     tokenIds[0] = _tokenId;
-    //     vm.expectRevert(
-    //         abi.encodeWithSignature("OwnerQueryForNonexistentToken()")
-    //     );
-    //     ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
-    // }
+    function test_toggleCre8ingRevert_OwnerQueryForNonexistentToken(
+        uint256 _tokenId
+    ) public setupERC721MusicGameNFTBase {
+        (bool cre8ing, uint256 current, uint256 total) = ERC721MusicGameNFTBase
+            .cre8ingPeriod(_tokenId);
+        assertTrue(!cre8ing);
+        assertEq(current, 0);
+        assertEq(total, 0);
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = _tokenId;
+        vm.expectRevert(
+            abi.encodeWithSignature("OwnerQueryForNonexistentToken()")
+        );
+        ERC721MusicGameNFTBase.toggleCre8ing(tokenIds);
+    }
 
     // function test_toggleCre8ingRevert_Cre8ing_Cre8ingClosed()
     //     public

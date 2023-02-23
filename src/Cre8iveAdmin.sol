@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {AccessControl} from "lib/openzeppelin-contracts/contracts/access/AccessControl.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  ██████╗██████╗ ███████╗ █████╗  ██████╗ ██████╗ ███████╗
@@ -23,7 +23,7 @@ contract Cre8iveAdmin is AccessControl {
     /// @notice Missing the given role or admin access
     error AdminAccess_MissingRoleOrAdmin(bytes32 role);
 
-    constructor(address _initialOwner) {
+    constructor(address _initialOwner) AccessControl() {
         // Setup the owner role
         _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
     }
