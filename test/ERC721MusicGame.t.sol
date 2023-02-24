@@ -678,9 +678,46 @@ contract ERC721MusicGameTest is DSTest {
         musicGame.setCre8ingOpen(true);
         musicGame.toggleCre8ing(unstaked);
         staked = musicGame.cre8ingTokens();
-        emit log_uint(staked[0]);
         for (uint256 i = 0; i < staked.length; i++) {
             assertEq(staked[i], i + 1);
+        }
+        assertEq(staked.length, 100);
+    }
+
+    function test_cre8ingURI() public {
+        vm.deal(address(456), 1 ether);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: 0,
+            maxSalePurchasePerAddress: 0,
+            presaleMerkleRoot: bytes32(0)
+        });
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        musicGame.purchase(100, initData);
+        string[] memory staked = musicGame.cre8ingURI();
+        assertEq(staked.length, 100);
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], "");
+        }
+        uint256[] memory unstaked = new uint256[](100);
+        for (uint256 i = 0; i < unstaked.length; i++) {
+            unstaked[i] = i + 1;
+        }
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setCre8ingOpen(true);
+        musicGame.toggleCre8ing(unstaked);
+        staked = musicGame.cre8ingURI();
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], musicGame.tokenURI(i + 1));
         }
         assertEq(staked.length, 100);
     }
