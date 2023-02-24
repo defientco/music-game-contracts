@@ -1053,6 +1053,23 @@ contract ERC721MusicGame is
         }
     }
 
+    /// @notice array of staked tokenIDs
+    /// @dev used in music game to quickly get list of staked samples.
+    function cre8ingTokens()
+        external
+        view
+        returns (uint256[] memory stakedTokens)
+    {
+        uint256 size = _lastMintedTokenId();
+        stakedTokens = new uint256[](size);
+        for (uint256 i = 1; i < size + 1; ++i) {
+            uint256 start = cre8ingStarted[i];
+            if (start != 0) {
+                stakedTokens[i - 1] = i;
+            }
+        }
+    }
+
     /// @notice Requires that msg.sender owns or is approved for the token.
     modifier onlyApprovedOrOwner(uint256 tokenId) {
         if (
