@@ -29,6 +29,7 @@ contract ERC721MusicGameTest is DSTest {
     ERC721MusicGame zoraNFTBase;
     ChillToken ct;
     MockUser mockUser;
+    uint256[] samples;
     Vm public constant vm = Vm(HEVM_ADDRESS);
     DummyMetadataRenderer public dummyRenderer = new DummyMetadataRenderer();
     MusicGameMetadataRenderer public musicGameRenderer =
@@ -99,6 +100,7 @@ contract ERC721MusicGameTest is DSTest {
             })
         });
         ct = new ChillToken(address(1));
+        samples.push(1);
         vm.prank(address(1));
         ct.mint(address(1), type(uint64).max);
     }
@@ -149,10 +151,12 @@ contract ERC721MusicGameTest is DSTest {
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
 
         zoraNFTBase.purchase{value: amount}(1, initData);
@@ -193,10 +197,12 @@ contract ERC721MusicGameTest is DSTest {
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "Description for metadata",
             "https://example.com/image.png",
-            "https://example.com/animation.mp4"
+            "https://example.com/animation.mp4",
+            initSamples
         );
 
         zoraNFTBase.purchase{value: amount}(1, initData);
@@ -210,7 +216,8 @@ contract ERC721MusicGameTest is DSTest {
         initData = abi.encode(
             "Description for metadata2",
             "https://example.com/image2.png",
-            "https://example.com/animation2.mp4"
+            "https://example.com/animation2.mp4",
+            samples
         );
 
         zoraNFTBase.purchase{value: amount}(1, initData);
@@ -241,10 +248,12 @@ contract ERC721MusicGameTest is DSTest {
 
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         if (amount > 0) {
             vm.expectRevert("ERC20: insufficient allowance");
@@ -281,10 +290,12 @@ contract ERC721MusicGameTest is DSTest {
         ct.approve(address(zoraNFTBase), type(uint256).max);
         vm.prank(address(1));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         zoraNFTBase.purchase(1, initData);
         require(
@@ -316,10 +327,12 @@ contract ERC721MusicGameTest is DSTest {
 
         assertTrue(!zoraNFTBase.saleDetails().publicSaleActive);
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
 
         vm.deal(address(456), 1 ether);
@@ -368,9 +381,12 @@ contract ERC721MusicGameTest is DSTest {
 
     function test_MintWrongValue() public setupZoraNFTBase(10) {
         vm.deal(address(456), 1 ether);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
+            "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
@@ -492,10 +508,12 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0),
             maxSalePurchasePerAddress: 10
         });
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
@@ -630,7 +648,6 @@ contract ERC721MusicGameTest is DSTest {
     }
 
     // Add test burn failure state for users that don't own the token
-
     function test_EIP165() public view {
         require(zoraNFTBase.supportsInterface(0x01ffc9a7), "supports 165");
         require(zoraNFTBase.supportsInterface(0x80ac58cd), "supports 721");
