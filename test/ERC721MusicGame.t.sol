@@ -762,32 +762,59 @@ contract ERC721MusicGameTest is DSTest {
         }
         assertEq(staked.length, 100);
     }
+
+    function test_MusicGameAirdrop() public setupZoraNFTBase(1000) {
+        vm.startPrank(DEFAULT_OWNER_ADDRESS);
+
+        // airdrop initial game samples
+        address[] memory toMint = new address[](4);
+        toMint[0] = address(0x10);
+        toMint[1] = address(0x11);
+        toMint[2] = address(0x12);
+        toMint[3] = address(0x13);
+        musicGame.adminMintAirdrop(toMint);
+        assertEq(musicGame.saleDetails().totalMinted, 4);
+        assertEq(musicGame.balanceOf(address(0x10)), 1);
+        assertEq(musicGame.balanceOf(address(0x11)), 1);
+        assertEq(musicGame.balanceOf(address(0x12)), 1);
+        assertEq(musicGame.balanceOf(address(0x13)), 1);
+
+        // prepare game
+        musicGame.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: 0.01 ether,
+            maxSalePurchasePerAddress: 2,
+            presaleMerkleRoot: bytes32(0)
+        });
+
+        uint256[] memory initSamples = new uint256[](4);
+        initSamples[0] = 1;
+        initSamples[1] = 2;
+        initSamples[2] = 3;
+        initSamples[3] = 4;
+
+        // metadata for new mix
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/",
+            initSamples
+        );
+        vm.stopPrank();
+        vm.startPrank(address(0x14));
+        vm.deal(address(0x14), 0.01 ether);
+        musicGame.purchase{value: 0.01 ether}(1, initData);
+
+        // verify airdrop for sample holders
+        assertEq(musicGame.saleDetails().totalMinted, 9);
+        assertEq(musicGame.balanceOf(address(0x10)), 2);
+        assertEq(musicGame.balanceOf(address(0x11)), 2);
+        assertEq(musicGame.balanceOf(address(0x12)), 2);
+        assertEq(musicGame.balanceOf(address(0x13)), 2);
+        assertEq(musicGame.balanceOf(address(0x14)), 1);
+    }
 }
-
-// // test Music Game Init
-//     function test_MusicGameAirdrop() public setupZoraNFTBase(1000) {
-//         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-
-//         // airdrop initial game samples
-//         address[] memory toMint = new address[](4);
-//         toMint[0] = address(0x10);
-//         toMint[1] = address(0x11);
-//         toMint[2] = address(0x12);
-//         toMint[3] = address(0x13);
-//         zoraNFTBase.adminMintAirdrop(toMint);
-//         assertEq(zoraNFTBase.saleDetails().totalMinted, 4);
-//         assertEq(zoraNFTBase.balanceOf(address(0x10)), 1);
-//         assertEq(zoraNFTBase.balanceOf(address(0x11)), 1);
-//         assertEq(zoraNFTBase.balanceOf(address(0x12)), 1);
-//         assertEq(zoraNFTBase.balanceOf(address(0x13)), 1);
-
-//         // prepare game
-//         zoraNFTBase.setSaleConfiguration({
-
-//     // verify airdrop for sample holders
-// assertEq(musicGame.saleDetails().totalMinted, 9);
-// assertEq(musicGame.balanceOf(address(0x10)), 2);
-// assertEq(musicGame.balanceOf(address(0x11)), 2);
-// assertEq(musicGame.balanceOf(address(0x12)), 2);
-// assertEq(musicGame.balanceOf(address(0x13)), 2);
-// assertEq(musicGame.balanceOf(address(0x14)), 1);
