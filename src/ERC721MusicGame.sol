@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 /**
          )     (   (            (   (   
@@ -12,13 +12,13 @@ pragma solidity ^0.8.10;
                      |_|                
  */
 
-import {ERC721AUpgradeable} from "erc721a-upgradeable/ERC721AUpgradeable.sol";
-import {IERC721AUpgradeable} from "erc721a-upgradeable/IERC721AUpgradeable.sol";
-import {IERC2981Upgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {MerkleProofUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/MerkleProofUpgradeable.sol";
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {ERC721A} from "lib/ERC721A/contracts/ERC721A.sol";
+import {IERC721A} from "lib/ERC721A/contracts/IERC721A.sol";
+import {IERC2981, IERC165} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IMetadataRenderer} from "./interfaces/IMetadataRenderer.sol";
 import {IERC721Drop} from "./interfaces/IERC721Drop.sol";
 import {IOwnable} from "./interfaces/IOwnable.sol";
@@ -26,6 +26,7 @@ import {OwnableSkeleton} from "./utils/OwnableSkeleton.sol";
 import {FundsReceiver} from "./utils/FundsReceiver.sol";
 import {Version} from "./utils/Version.sol";
 import {ERC721DropStorageV1} from "./storage/ERC721DropStorageV1.sol";
+import {Cre8ing} from "./Cre8ing.sol";
 
 /**
  * @notice ZORA NFT Base contract for Drops and Editions
@@ -36,25 +37,21 @@ import {ERC721DropStorageV1} from "./storage/ERC721DropStorageV1.sol";
  *
  */
 contract ERC721MusicGame is
-    ERC721AUpgradeable,
-    IERC2981Upgradeable,
-    ReentrancyGuardUpgradeable,
-    AccessControlUpgradeable,
+    ERC721A,
+    IERC2981,
+    ReentrancyGuard,
     IERC721Drop,
     OwnableSkeleton,
     FundsReceiver,
     Version(8),
-    ERC721DropStorageV1
+    ERC721DropStorageV1,
+    Cre8ing
 {
     /// @dev This is the max mint batch size for the optimized ERC721A mint contract
     uint256 internal constant MAX_MINT_BATCH_SIZE = 8;
 
     /// @dev Gas limit to send funds
     uint256 internal constant FUNDS_SEND_GAS_LIMIT = 210_000;
-
-    /// @notice Access control roles
-    bytes32 public immutable MINTER_ROLE = keccak256("MINTER");
-    bytes32 public immutable SALES_MANAGER_ROLE = keccak256("SALES_MANAGER");
 
     /// @notice Max royalty BPS
     uint16 constant MAX_ROYALTY_BPS = 50_00;
@@ -63,19 +60,6 @@ contract ERC721MusicGame is
     modifier onlyAdmin() {
         if (!hasRole(DEFAULT_ADMIN_ROLE, _msgSender())) {
             revert Access_OnlyAdmin();
-        }
-
-        _;
-    }
-
-    /// @notice Only a given role has access or admin
-    /// @param role role to check for alongside the admin role
-    modifier onlyRoleOrAdmin(bytes32 role) {
-        if (
-            !hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) &&
-            !hasRole(role, _msgSender())
-        ) {
-            revert Access_MissingRoleOrAdmin(role);
         }
 
         _;
@@ -122,7 +106,7 @@ contract ERC721MusicGame is
 
     /// @notice Getter for last minted token ID (gets next token id and subtracts 1)
     function _lastMintedTokenId() internal view returns (uint256) {
-        return _currentIndex - 1;
+        return _nextTokenId() - 1;
     }
 
     /// @notice Start token ID for minting (1-100 vs 0-99)
@@ -148,15 +132,11 @@ contract ERC721MusicGame is
         uint16 _royaltyBPS,
         ERC20SalesConfiguration memory _salesConfig,
         IMetadataRenderer _metadataRenderer
-    ) initializer {
-        // Setup ERC721A
-        __ERC721A_init(_contractName, _contractSymbol);
-        // Setup access control
-        __AccessControl_init();
-        // Setup re-entracy guard
-        __ReentrancyGuard_init();
-        // Setup the owner role
-        _setupRole(DEFAULT_ADMIN_ROLE, _initialOwner);
+    )
+        ERC721A(_contractName, _contractSymbol)
+        Cre8ing(_initialOwner)
+        ReentrancyGuard()
+    {
         // Set ownership to original sender of contract call
         _setOwner(_initialOwner);
 
@@ -269,7 +249,7 @@ contract ERC721MusicGame is
     function isApprovedForAll(address nftOwner, address operator)
         public
         view
-        override(ERC721AUpgradeable)
+        override(ERC721A)
         returns (bool)
     {
         return super.isApprovedForAll(nftOwner, operator);
@@ -356,7 +336,7 @@ contract ERC721MusicGame is
                 revert Purchase_WrongPrice(salePrice * quantity);
             }
         } else {
-            IERC20Upgradeable(erc20PaymentToken).transferFrom(
+            IERC20(erc20PaymentToken).transferFrom(
                 msg.sender,
                 fundsRecipient,
                 salePrice * quantity
@@ -497,7 +477,7 @@ contract ERC721MusicGame is
         returns (uint256)
     {
         if (
-            !MerkleProofUpgradeable.verify(
+            !MerkleProof.verify(
                 merkleProof,
                 salesConfig.presaleMerkleRoot,
                 keccak256(
@@ -645,7 +625,7 @@ contract ERC721MusicGame is
         canMintTokens(recipients.length)
         returns (uint256)
     {
-        uint256 atId = _currentIndex;
+        uint256 atId = _nextTokenId();
         uint256 startAt = atId;
 
         unchecked {
@@ -988,7 +968,7 @@ contract ERC721MusicGame is
         returns (string memory)
     {
         if (!_exists(tokenId)) {
-            revert IERC721AUpgradeable.URIQueryForNonexistentToken();
+            revert IERC721A.URIQueryForNonexistentToken();
         }
 
         return config.metadataRenderer.tokenURI(tokenId);
@@ -999,17 +979,119 @@ contract ERC721MusicGame is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(
-            IERC165Upgradeable,
-            ERC721AUpgradeable,
-            AccessControlUpgradeable
-        )
+        override(IERC165, ERC721A, AccessControl)
         returns (bool)
     {
         return
             super.supportsInterface(interfaceId) ||
             type(IOwnable).interfaceId == interfaceId ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId ||
+            type(IERC2981).interfaceId == interfaceId ||
             type(IERC721Drop).interfaceId == interfaceId;
+    }
+
+    /////////////////////////////////////////////////
+    /// CRE8ING
+    /////////////////////////////////////////////////
+
+    /// @notice Changes the CRE8ORs' cre8ing statuss (what's the plural of status?
+    ///     statii? statuses? status? The plural of sheep is sheep; maybe it's also the
+    ///     plural of status).
+    /// @dev Changes the CRE8ORs' cre8ing sheep (see @notice).
+    function toggleCre8ing(uint256[] calldata tokenIds) external {
+        uint256 n = tokenIds.length;
+        for (uint256 i = 0; i < n; ++i) {
+            toggleCre8ing(tokenIds[i]);
+        }
+    }
+
+    /// @notice Changes the CRE8OR's cre8ing status.
+    function toggleCre8ing(uint256 tokenId)
+        internal
+        onlyApprovedOrOwner(tokenId)
+    {
+        uint256 start = cre8ingStarted[tokenId];
+        if (start == 0) {
+            if (!cre8ingOpen) {
+                revert Cre8ing_Cre8ingClosed();
+            }
+            cre8ingStarted[tokenId] = block.timestamp;
+            emit Cre8ed(tokenId);
+        } else {
+            cre8ingTotal[tokenId] += block.timestamp - start;
+            cre8ingStarted[tokenId] = 0;
+            emit Uncre8ed(tokenId);
+        }
+    }
+
+    /// @notice Transfer a token between addresses while the CRE8OR is minting,
+    ///     thus not resetting the cre8ing period.
+    function safeTransferWhileCre8ing(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external {
+        if (ownerOf(tokenId) != _msgSender()) {
+            revert Access_OnlyOwner();
+        }
+        cre8ingTransfer = 2;
+        safeTransferFrom(from, to, tokenId);
+        cre8ingTransfer = 1;
+    }
+
+    /// @dev Block transfers while cre8ing.
+    function _beforeTokenTransfers(
+        address,
+        address,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal view override {
+        uint256 tokenId = startTokenId;
+        for (uint256 end = tokenId + quantity; tokenId < end; ++tokenId) {
+            if (cre8ingStarted[tokenId] != 0 && cre8ingTransfer != 2) {
+                revert Cre8ing_Cre8ing();
+            }
+        }
+    }
+
+    /// @notice array of staked tokenIDs
+    /// @dev used in music game to quickly get list of staked samples.
+    function cre8ingTokens()
+        external
+        view
+        returns (uint256[] memory stakedTokens)
+    {
+        uint256 size = _lastMintedTokenId();
+        stakedTokens = new uint256[](size);
+        for (uint256 i = 1; i < size + 1; ++i) {
+            uint256 start = cre8ingStarted[i];
+            if (start != 0) {
+                stakedTokens[i - 1] = i;
+            }
+        }
+    }
+
+    /// @notice array of staked token URI
+    /// @dev used in music game to quickly get list of staked samples.
+    function cre8ingURI() external view returns (string[] memory stakedURI) {
+        uint256 size = _lastMintedTokenId();
+        stakedURI = new string[](size);
+        for (uint256 i = 1; i < size + 1; ++i) {
+            uint256 start = cre8ingStarted[i];
+            if (start != 0) {
+                stakedURI[i - 1] = tokenURI(i);
+            }
+        }
+    }
+
+    /// @notice Requires that msg.sender owns or is approved for the token.
+    modifier onlyApprovedOrOwner(uint256 tokenId) {
+        if (
+            _ownershipOf(tokenId).addr != _msgSender() &&
+            getApproved(tokenId) != _msgSender()
+        ) {
+            revert Access_MissingOwnerOrApproved();
+        }
+
+        _;
     }
 }
