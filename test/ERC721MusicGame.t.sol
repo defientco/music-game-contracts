@@ -678,7 +678,6 @@ contract ERC721MusicGameTest is DSTest {
         });
 
         uint256[] memory initSamples = new uint256[](0);
-        // metadata for new mix
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
@@ -689,14 +688,6 @@ contract ERC721MusicGameTest is DSTest {
         vm.startPrank(address(0x14));
         vm.deal(address(0x14), 1 ether);
         musicGame.purchase{value: 0.01 ether}(1, initData);
-
-        // verify airdrop for sample holders
-        assertEq(musicGame.saleDetails().totalMinted, 9);
-        assertEq(musicGame.balanceOf(address(0x10)), 2);
-        assertEq(musicGame.balanceOf(address(0x11)), 2);
-        assertEq(musicGame.balanceOf(address(0x12)), 2);
-        assertEq(musicGame.balanceOf(address(0x13)), 2);
-        assertEq(musicGame.balanceOf(address(0x14)), 1);
 
         uint256[] memory newSamples = new uint256[](4);
         newSamples[0] = 1;
@@ -710,12 +701,13 @@ contract ERC721MusicGameTest is DSTest {
             newSamples
         );
         musicGame.purchase{value: 0.01 ether}(1, initData);
+
         uint256[] memory staked = musicGame.cre8ingTokens();
-        assertEq(staked.length, 100);
+        assertEq(staked.length, 6);
         for (uint256 i = 0; i < staked.length; i++) {
             assertEq(staked[i], 0);
         }
-        uint256[] memory unstaked = new uint256[](100);
+        uint256[] memory unstaked = new uint256[](6);
         for (uint256 i = 0; i < unstaked.length; i++) {
             unstaked[i] = i + 1;
         }
@@ -728,7 +720,7 @@ contract ERC721MusicGameTest is DSTest {
         for (uint256 i = 0; i < staked.length; i++) {
             assertEq(staked[i], i + 1);
         }
-        assertEq(staked.length, 100);
+        assertEq(staked.length, 6);
     }
 
     function test_cre8ingURI() public {
@@ -744,10 +736,12 @@ contract ERC721MusicGameTest is DSTest {
             maxSalePurchasePerAddress: 0,
             presaleMerkleRoot: bytes32(0)
         });
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         musicGame.purchase(100, initData);
         string[] memory staked = musicGame.cre8ingURI();
@@ -789,3 +783,11 @@ contract ERC721MusicGameTest is DSTest {
 
 //         // prepare game
 //         zoraNFTBase.setSaleConfiguration({
+
+//     // verify airdrop for sample holders
+// assertEq(musicGame.saleDetails().totalMinted, 9);
+// assertEq(musicGame.balanceOf(address(0x10)), 2);
+// assertEq(musicGame.balanceOf(address(0x11)), 2);
+// assertEq(musicGame.balanceOf(address(0x12)), 2);
+// assertEq(musicGame.balanceOf(address(0x13)), 2);
+// assertEq(musicGame.balanceOf(address(0x14)), 1);
