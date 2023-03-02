@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
@@ -61,7 +61,10 @@ library NFTMetadataRenderer {
                         '", "seller_fee_basis_points": ',
                         Strings.toString(royaltyBPS),
                         ', "fee_recipient": "',
-                        Strings.toHexString(uint256(uint160(royaltyRecipient)), 20),
+                        Strings.toHexString(
+                            uint256(uint160(royaltyRecipient)),
+                            20
+                        ),
                         imageSpace,
                         '"}'
                     )

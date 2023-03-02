@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import {EditionMetadataRenderer} from "../../src/metadata/EditionMetadataRenderer.sol";
 import {MetadataRenderAdminCheck} from "../../src/metadata/MetadataRenderAdminCheck.sol";
@@ -9,7 +9,11 @@ import {Vm} from "forge-std/Vm.sol";
 
 contract TestAdmin is MetadataRenderAdminCheck {
     event Ok();
-    function updateSomething(address target) external requireSenderAdmin(target) {
+
+    function updateSomething(address target)
+        external
+        requireSenderAdmin(target)
+    {
         emit Ok();
     }
 }
@@ -27,22 +31,20 @@ contract EditionMetadataRendererTest is DSTest {
     function test_MetadataRenderAdminCheckSender() public {
         address testTarget = address(0x10);
         vm.startPrank(testTarget);
-        testAdmin.updateSomething(testTarget); 
+        testAdmin.updateSomething(testTarget);
     }
 
     function test_MetadataRenderAdminCheckGetterFailure() public {
         address testTarget = address(mockBase);
         vm.startPrank(address(0x12));
         vm.expectRevert(MetadataRenderAdminCheck.Access_OnlyAdmin.selector);
-        testAdmin.updateSomething(testTarget); 
+        testAdmin.updateSomething(testTarget);
     }
 
     function test_MetadataRenderAdminCheckSuccess() public {
         mockBase.setIsAdmin(address(0x12), true);
         address testTarget = address(mockBase);
         vm.startPrank(address(0x12));
-        testAdmin.updateSomething(testTarget); 
+        testAdmin.updateSomething(testTarget);
     }
-
-
 }

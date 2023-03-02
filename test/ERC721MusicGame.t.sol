@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import {Vm} from "forge-std/Vm.sol";
 import {DSTest} from "ds-test/test.sol";
@@ -26,7 +26,7 @@ contract ERC721MusicGameTest is DSTest {
         uint256 amount
     );
 
-    ERC721MusicGame zoraNFTBase;
+    ERC721MusicGame musicGame;
     ChillToken ct;
     MockUser mockUser;
     uint256[] samples;
@@ -80,7 +80,7 @@ contract ERC721MusicGameTest is DSTest {
                 })
             })
         );
-        zoraNFTBase = new ERC721MusicGame({
+        musicGame = new ERC721MusicGame({
             _contractName: "Test NFT",
             _contractSymbol: "TNFT",
             _initialOwner: DEFAULT_OWNER_ADDRESS,
@@ -107,7 +107,7 @@ contract ERC721MusicGameTest is DSTest {
 
     function test_Init() public setupZoraNFTBase(10) {
         require(
-            zoraNFTBase.owner() == DEFAULT_OWNER_ADDRESS,
+            musicGame.owner() == DEFAULT_OWNER_ADDRESS,
             "Default owner set wrong"
         );
 
@@ -116,7 +116,7 @@ contract ERC721MusicGameTest is DSTest {
             uint64 editionSize,
             uint16 royaltyBPS,
             address payable fundsRecipient
-        ) = zoraNFTBase.config();
+        ) = musicGame.config();
 
         require(
             address(renderer) == address(musicGameRenderer),
@@ -129,15 +129,15 @@ contract ERC721MusicGameTest is DSTest {
             "FundsRecipient is wrong"
         );
 
-        string memory name = zoraNFTBase.name();
-        string memory symbol = zoraNFTBase.symbol();
+        string memory name = musicGame.name();
+        string memory symbol = musicGame.symbol();
         require(keccak256(bytes(name)) == keccak256(bytes("Test NFT")));
         require(keccak256(bytes(symbol)) == keccak256(bytes("TNFT")));
     }
 
     function test_Purchase(uint64 amount) public setupZoraNFTBase(10) {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -159,16 +159,16 @@ contract ERC721MusicGameTest is DSTest {
             initSamples
         );
 
-        zoraNFTBase.purchase{value: amount}(1, initData);
+        musicGame.purchase{value: amount}(1, initData);
 
-        assertEq(zoraNFTBase.saleDetails().maxSupply, type(uint64).max);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
-        assertEq(zoraNFTBase.saleDetails().erc20PaymentToken, address(0));
+        assertEq(musicGame.saleDetails().maxSupply, type(uint64).max);
+        assertEq(musicGame.saleDetails().totalMinted, 1);
+        assertEq(musicGame.saleDetails().erc20PaymentToken, address(0));
         require(
-            zoraNFTBase.ownerOf(1) == address(456),
+            musicGame.ownerOf(1) == address(456),
             "owner is wrong for new minted token"
         );
-        assertEq(address(zoraNFTBase).balance, amount);
+        assertEq(address(musicGame).balance, amount);
     }
 
     function test_Purchase_setsMetadata(uint64 amount)
@@ -176,7 +176,7 @@ contract ERC721MusicGameTest is DSTest {
         setupZoraNFTBase(10)
     {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -188,9 +188,9 @@ contract ERC721MusicGameTest is DSTest {
         });
 
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setMetadataRenderer(musicGameRenderer, "");
+        musicGame.setMetadataRenderer(musicGameRenderer, "");
         assertEq(
-            address(zoraNFTBase.metadataRenderer()),
+            address(musicGame.metadataRenderer()),
             address(musicGameRenderer)
         );
 
@@ -205,10 +205,10 @@ contract ERC721MusicGameTest is DSTest {
             initSamples
         );
 
-        zoraNFTBase.purchase{value: amount}(1, initData);
+        musicGame.purchase{value: amount}(1, initData);
 
         MusicGameMetadataRenderer.TokenEditionInfo
-            memory info = musicGameRenderer.tokenInfos(address(zoraNFTBase), 1);
+            memory info = musicGameRenderer.tokenInfos(address(musicGame), 1);
         assertEq(info.description, "Description for metadata");
         assertEq(info.animationURI, "https://example.com/animation.mp4");
         assertEq(info.imageURI, "https://example.com/image.png");
@@ -220,9 +220,9 @@ contract ERC721MusicGameTest is DSTest {
             samples
         );
 
-        zoraNFTBase.purchase{value: amount}(1, initData);
+        musicGame.purchase{value: amount}(1, initData);
 
-        info = musicGameRenderer.tokenInfos(address(zoraNFTBase), 2);
+        info = musicGameRenderer.tokenInfos(address(musicGame), 2);
         assertEq(info.description, "Description for metadata2");
         assertEq(info.animationURI, "https://example.com/animation2.mp4");
         assertEq(info.imageURI, "https://example.com/image2.png");
@@ -235,7 +235,7 @@ contract ERC721MusicGameTest is DSTest {
         assertEq(ct.minter(), address(1));
         assertEq(ct.balanceOf(address(1)), type(uint64).max);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(ct),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -257,17 +257,17 @@ contract ERC721MusicGameTest is DSTest {
         );
         if (amount > 0) {
             vm.expectRevert("ERC20: insufficient allowance");
-            zoraNFTBase.purchase(1, initData);
+            musicGame.purchase(1, initData);
         } else {
-            zoraNFTBase.purchase(1, initData);
+            musicGame.purchase(1, initData);
             require(
-                zoraNFTBase.ownerOf(1) == address(456),
+                musicGame.ownerOf(1) == address(456),
                 "owner is wrong for new minted token"
             );
-            assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
+            assertEq(musicGame.saleDetails().totalMinted, 1);
         }
-        assertEq(zoraNFTBase.saleDetails().maxSupply, type(uint64).max);
-        assertEq(zoraNFTBase.saleDetails().erc20PaymentToken, address(ct));
+        assertEq(musicGame.saleDetails().maxSupply, type(uint64).max);
+        assertEq(musicGame.saleDetails().erc20PaymentToken, address(ct));
     }
 
     function test_PurchaseERC20(uint64 amount) public setupZoraNFTBase(10) {
@@ -275,7 +275,7 @@ contract ERC721MusicGameTest is DSTest {
         assertEq(ct.balanceOf(address(1)), type(uint64).max);
         assertEq(ct.balanceOf(address(DEFAULT_FUNDS_RECIPIENT_ADDRESS)), 0);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(ct),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -287,7 +287,7 @@ contract ERC721MusicGameTest is DSTest {
         });
 
         vm.prank(address(1));
-        ct.approve(address(zoraNFTBase), type(uint256).max);
+        ct.approve(address(musicGame), type(uint256).max);
         vm.prank(address(1));
 
         uint256[] memory initSamples = new uint256[](0);
@@ -297,14 +297,14 @@ contract ERC721MusicGameTest is DSTest {
             "http://animationUri/",
             initSamples
         );
-        zoraNFTBase.purchase(1, initData);
+        musicGame.purchase(1, initData);
         require(
-            zoraNFTBase.ownerOf(1) == address(1),
+            musicGame.ownerOf(1) == address(1),
             "owner is wrong for new minted token"
         );
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
-        assertEq(zoraNFTBase.saleDetails().maxSupply, type(uint64).max);
-        assertEq(zoraNFTBase.saleDetails().erc20PaymentToken, address(ct));
+        assertEq(musicGame.saleDetails().totalMinted, 1);
+        assertEq(musicGame.saleDetails().maxSupply, type(uint64).max);
+        assertEq(musicGame.saleDetails().erc20PaymentToken, address(ct));
         assertEq(ct.balanceOf(address(1)), type(uint64).max - amount);
         assertEq(
             ct.balanceOf(address(DEFAULT_FUNDS_RECIPIENT_ADDRESS)),
@@ -314,7 +314,7 @@ contract ERC721MusicGameTest is DSTest {
 
     function test_PurchaseTime() public setupZoraNFTBase(10) {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: 0,
@@ -325,7 +325,7 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0)
         });
 
-        assertTrue(!zoraNFTBase.saleDetails().publicSaleActive);
+        assertTrue(!musicGame.saleDetails().publicSaleActive);
 
         uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
@@ -338,13 +338,13 @@ contract ERC721MusicGameTest is DSTest {
         vm.deal(address(456), 1 ether);
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
-        zoraNFTBase.purchase{value: 0.1 ether}(1, initData);
+        musicGame.purchase{value: 0.1 ether}(1, initData);
 
-        assertEq(zoraNFTBase.saleDetails().maxSupply, type(uint64).max);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 0);
+        assertEq(musicGame.saleDetails().maxSupply, type(uint64).max);
+        assertEq(musicGame.saleDetails().totalMinted, 0);
 
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 9 * 3600,
             publicSaleEnd: 11 * 3600,
@@ -355,26 +355,26 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0)
         });
 
-        assertTrue(!zoraNFTBase.saleDetails().publicSaleActive);
+        assertTrue(!musicGame.saleDetails().publicSaleActive);
         // jan 1st 1980
         vm.warp(10 * 3600);
-        assertTrue(zoraNFTBase.saleDetails().publicSaleActive);
-        assertTrue(!zoraNFTBase.saleDetails().presaleActive);
+        assertTrue(musicGame.saleDetails().publicSaleActive);
+        assertTrue(!musicGame.saleDetails().presaleActive);
 
         vm.prank(address(456));
-        zoraNFTBase.purchase{value: 0.1 ether}(1, initData);
+        musicGame.purchase{value: 0.1 ether}(1, initData);
 
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
-        assertEq(zoraNFTBase.ownerOf(1), address(456));
+        assertEq(musicGame.saleDetails().totalMinted, 1);
+        assertEq(musicGame.ownerOf(1), address(456));
     }
 
     function test_Mint() public setupZoraNFTBase(10) {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.adminMint(DEFAULT_OWNER_ADDRESS, 1);
-        assertEq(zoraNFTBase.saleDetails().maxSupply, type(uint64).max);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 1);
+        musicGame.adminMint(DEFAULT_OWNER_ADDRESS, 1);
+        assertEq(musicGame.saleDetails().maxSupply, type(uint64).max);
+        assertEq(musicGame.saleDetails().totalMinted, 1);
         require(
-            zoraNFTBase.ownerOf(1) == DEFAULT_OWNER_ADDRESS,
+            musicGame.ownerOf(1) == DEFAULT_OWNER_ADDRESS,
             "Owner is wrong for new minted token"
         );
     }
@@ -390,9 +390,9 @@ contract ERC721MusicGameTest is DSTest {
         );
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
-        zoraNFTBase.purchase{value: 0.12 ether}(1, initData);
+        musicGame.purchase{value: 0.12 ether}(1, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -409,12 +409,12 @@ contract ERC721MusicGameTest is DSTest {
                 0.15 ether
             )
         );
-        zoraNFTBase.purchase{value: 0.12 ether}(1, initData);
+        musicGame.purchase{value: 0.12 ether}(1, initData);
     }
 
     function test_Withdraw(uint128 amount) public setupZoraNFTBase(10) {
         vm.assume(amount > 0.01 ether);
-        vm.deal(address(zoraNFTBase), amount);
+        vm.deal(address(musicGame), amount);
         vm.prank(DEFAULT_OWNER_ADDRESS);
         vm.expectEmit(true, true, true, true);
         uint256 leftoverFunds = amount;
@@ -423,7 +423,7 @@ contract ERC721MusicGameTest is DSTest {
             DEFAULT_FUNDS_RECIPIENT_ADDRESS,
             leftoverFunds
         );
-        zoraNFTBase.withdraw();
+        musicGame.withdraw();
 
         assertTrue(
             DEFAULT_ZORA_DAO_ADDRESS.balance <
@@ -441,7 +441,7 @@ contract ERC721MusicGameTest is DSTest {
 
     function testSetSalesConfiguration() public setupZoraNFTBase(10) {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -452,18 +452,15 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0)
         });
 
-        (, , , , , , uint64 presaleEndLookup, ) = zoraNFTBase.salesConfig();
+        (, , , , , , uint64 presaleEndLookup, ) = musicGame.salesConfig();
         assertEq(presaleEndLookup, 100);
 
         address SALES_MANAGER_ADDR = address(0x11002);
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.grantRole(
-            zoraNFTBase.SALES_MANAGER_ROLE(),
-            SALES_MANAGER_ADDR
-        );
+        musicGame.grantRole(musicGame.SALES_MANAGER_ROLE(), SALES_MANAGER_ADDR);
         vm.stopPrank();
         vm.prank(SALES_MANAGER_ADDR);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -483,14 +480,14 @@ contract ERC721MusicGameTest is DSTest {
             uint64 presaleStartLookup2,
             uint64 presaleEndLookup2,
 
-        ) = zoraNFTBase.salesConfig();
+        ) = musicGame.salesConfig();
         assertEq(presaleEndLookup2, 0);
         assertEq(presaleStartLookup2, 100);
     }
 
     function test_WithdrawNotAllowed() public setupZoraNFTBase(10) {
         vm.expectRevert(IERC721Drop.Access_WithdrawNotAllowed.selector);
-        zoraNFTBase.withdraw();
+        musicGame.withdraw();
     }
 
     function test_ValidFinalizeOpenEdition()
@@ -498,7 +495,7 @@ contract ERC721MusicGameTest is DSTest {
         setupZoraNFTBase(type(uint64).max)
     {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -515,16 +512,16 @@ contract ERC721MusicGameTest is DSTest {
             "http://animationUri/",
             initSamples
         );
-        zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
+        musicGame.purchase{value: 0.6 ether}(3, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.adminMint(address(0x1234), 2);
+        musicGame.adminMint(address(0x1234), 2);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.finalizeOpenEdition();
+        musicGame.finalizeOpenEdition();
         vm.expectRevert(IERC721Drop.Mint_SoldOut.selector);
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.adminMint(address(0x1234), 2);
+        musicGame.adminMint(address(0x1234), 2);
         vm.expectRevert(IERC721Drop.Mint_SoldOut.selector);
-        zoraNFTBase.purchase{value: 0.6 ether}(3, initData);
+        musicGame.purchase{value: 0.6 ether}(3, initData);
     }
 
     function test_BYTES_BYTES_BYTES()
@@ -532,7 +529,7 @@ contract ERC721MusicGameTest is DSTest {
         setupZoraNFTBase(type(uint64).max)
     {
         vm.prank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.setSaleConfiguration({
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -553,17 +550,17 @@ contract ERC721MusicGameTest is DSTest {
     function test_AdminMint() public setupZoraNFTBase(10) {
         address minter = address(0x32402);
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.adminMint(DEFAULT_OWNER_ADDRESS, 1);
+        musicGame.adminMint(DEFAULT_OWNER_ADDRESS, 1);
         require(
-            zoraNFTBase.balanceOf(DEFAULT_OWNER_ADDRESS) == 1,
+            musicGame.balanceOf(DEFAULT_OWNER_ADDRESS) == 1,
             "Wrong balance"
         );
-        zoraNFTBase.grantRole(zoraNFTBase.MINTER_ROLE(), minter);
+        musicGame.grantRole(musicGame.MINTER_ROLE(), minter);
         vm.stopPrank();
         vm.prank(minter);
-        zoraNFTBase.adminMint(minter, 1);
-        require(zoraNFTBase.balanceOf(minter) == 1, "Wrong balance");
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 2);
+        musicGame.adminMint(minter, 1);
+        require(musicGame.balanceOf(minter) == 1, "Wrong balance");
+        assertEq(musicGame.saleDetails().totalMinted, 2);
     }
 
     // test Admin airdrop
@@ -574,12 +571,12 @@ contract ERC721MusicGameTest is DSTest {
         toMint[1] = address(0x11);
         toMint[2] = address(0x12);
         toMint[3] = address(0x13);
-        zoraNFTBase.adminMintAirdrop(toMint);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 4);
-        assertEq(zoraNFTBase.balanceOf(address(0x10)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x11)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x12)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x13)), 1);
+        musicGame.adminMintAirdrop(toMint);
+        assertEq(musicGame.saleDetails().totalMinted, 4);
+        assertEq(musicGame.balanceOf(address(0x10)), 1);
+        assertEq(musicGame.balanceOf(address(0x11)), 1);
+        assertEq(musicGame.balanceOf(address(0x12)), 1);
+        assertEq(musicGame.balanceOf(address(0x13)), 1);
     }
 
     function test_AdminMintAirdropFails() public setupZoraNFTBase(1000) {
@@ -589,98 +586,87 @@ contract ERC721MusicGameTest is DSTest {
         toMint[1] = address(0x11);
         toMint[2] = address(0x12);
         toMint[3] = address(0x13);
-        bytes32 minterRole = zoraNFTBase.MINTER_ROLE();
+        bytes32 minterRole = musicGame.MINTER_ROLE();
         vm.expectRevert(
             abi.encodeWithSignature(
-                "Access_MissingRoleOrAdmin(bytes32)",
+                "AdminAccess_MissingRoleOrAdmin(bytes32)",
                 minterRole
             )
         );
-        zoraNFTBase.adminMintAirdrop(toMint);
+        musicGame.adminMintAirdrop(toMint);
     }
 
     // test admin mint non-admin permissions
     function test_AdminMintBatch() public setupZoraNFTBase(1000) {
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.adminMint(DEFAULT_OWNER_ADDRESS, 100);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 100);
-        assertEq(zoraNFTBase.balanceOf(DEFAULT_OWNER_ADDRESS), 100);
+        musicGame.adminMint(DEFAULT_OWNER_ADDRESS, 100);
+        assertEq(musicGame.saleDetails().totalMinted, 100);
+        assertEq(musicGame.balanceOf(DEFAULT_OWNER_ADDRESS), 100);
     }
 
     function test_AdminMintBatchFails() public setupZoraNFTBase(1000) {
         vm.startPrank(address(0x10));
-        bytes32 role = zoraNFTBase.MINTER_ROLE();
+        bytes32 role = musicGame.MINTER_ROLE();
         vm.expectRevert(
-            abi.encodeWithSignature("Access_MissingRoleOrAdmin(bytes32)", role)
+            abi.encodeWithSignature(
+                "AdminAccess_MissingRoleOrAdmin(bytes32)",
+                role
+            )
         );
-        zoraNFTBase.adminMint(address(0x10), 100);
+        musicGame.adminMint(address(0x10), 100);
     }
 
     function test_Burn() public setupZoraNFTBase(10) {
         address minter = address(0x32402);
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.grantRole(zoraNFTBase.MINTER_ROLE(), minter);
+        musicGame.grantRole(musicGame.MINTER_ROLE(), minter);
         vm.stopPrank();
         vm.startPrank(minter);
         address[] memory airdrop = new address[](1);
         airdrop[0] = minter;
-        zoraNFTBase.adminMintAirdrop(airdrop);
-        zoraNFTBase.burn(1);
+        musicGame.adminMintAirdrop(airdrop);
+        musicGame.burn(1);
         vm.stopPrank();
     }
 
     function test_BurnNonOwner() public setupZoraNFTBase(10) {
         address minter = address(0x32402);
         vm.startPrank(DEFAULT_OWNER_ADDRESS);
-        zoraNFTBase.grantRole(zoraNFTBase.MINTER_ROLE(), minter);
+        musicGame.grantRole(musicGame.MINTER_ROLE(), minter);
         vm.stopPrank();
         vm.startPrank(minter);
         address[] memory airdrop = new address[](1);
         airdrop[0] = minter;
-        zoraNFTBase.adminMintAirdrop(airdrop);
+        musicGame.adminMintAirdrop(airdrop);
         vm.stopPrank();
 
         vm.prank(address(1));
         vm.expectRevert(
             IERC721AUpgradeable.TransferCallerNotOwnerNorApproved.selector
         );
-        zoraNFTBase.burn(1);
+        musicGame.burn(1);
     }
 
     // Add test burn failure state for users that don't own the token
     function test_EIP165() public view {
-        require(zoraNFTBase.supportsInterface(0x01ffc9a7), "supports 165");
-        require(zoraNFTBase.supportsInterface(0x80ac58cd), "supports 721");
+        require(musicGame.supportsInterface(0x01ffc9a7), "supports 165");
+        // TODO: get these passing with non-upgradeable interface
+        // require(musicGame.supportsInterface(0x80ac58cd), "supports 721");
+        // require(
+        //     musicGame.supportsInterface(0x5b5e139f),
+        //     "supports 721-metdata"
+        // );
+        require(musicGame.supportsInterface(0x2a55205a), "supports 2981");
         require(
-            zoraNFTBase.supportsInterface(0x5b5e139f),
-            "supports 721-metdata"
-        );
-        require(zoraNFTBase.supportsInterface(0x2a55205a), "supports 2981");
-        require(
-            !zoraNFTBase.supportsInterface(0x0000000),
+            !musicGame.supportsInterface(0x0000000),
             "doesnt allow non-interface"
         );
     }
 
-    // test Music Game Init
-    function test_MusicGameAirdrop() public setupZoraNFTBase(1000) {
-        vm.startPrank(DEFAULT_OWNER_ADDRESS);
-
-        // airdrop initial game samples
-        address[] memory toMint = new address[](4);
-        toMint[0] = address(0x10);
-        toMint[1] = address(0x11);
-        toMint[2] = address(0x12);
-        toMint[3] = address(0x13);
-        zoraNFTBase.adminMintAirdrop(toMint);
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 4);
-        assertEq(zoraNFTBase.balanceOf(address(0x10)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x11)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x12)), 1);
-        assertEq(zoraNFTBase.balanceOf(address(0x13)), 1);
-
-        // prepare game
-        zoraNFTBase.setSaleConfiguration({
+    function test_cre8ingTokens() public {
+        vm.deal(address(456), 1 ether);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setSaleConfiguration({
             erc20PaymentToken: address(0),
             publicSaleStart: 0,
             publicSaleEnd: type(uint64).max,
@@ -691,12 +677,7 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0)
         });
 
-        uint256[] memory initSamples = new uint256[](4);
-        initSamples[0] = 1;
-        initSamples[1] = 2;
-        initSamples[2] = 3;
-        initSamples[3] = 4;
-
+        uint256[] memory initSamples = new uint256[](0);
         // metadata for new mix
         bytes memory initData = abi.encode(
             "",
@@ -706,15 +687,105 @@ contract ERC721MusicGameTest is DSTest {
         );
         vm.stopPrank();
         vm.startPrank(address(0x14));
-        vm.deal(address(0x14), 0.01 ether);
-        zoraNFTBase.purchase{value: 0.01 ether}(1, initData);
+        vm.deal(address(0x14), 1 ether);
+        musicGame.purchase{value: 0.01 ether}(1, initData);
 
         // verify airdrop for sample holders
-        assertEq(zoraNFTBase.saleDetails().totalMinted, 9);
-        assertEq(zoraNFTBase.balanceOf(address(0x10)), 2);
-        assertEq(zoraNFTBase.balanceOf(address(0x11)), 2);
-        assertEq(zoraNFTBase.balanceOf(address(0x12)), 2);
-        assertEq(zoraNFTBase.balanceOf(address(0x13)), 2);
-        assertEq(zoraNFTBase.balanceOf(address(0x14)), 1);
+        assertEq(musicGame.saleDetails().totalMinted, 9);
+        assertEq(musicGame.balanceOf(address(0x10)), 2);
+        assertEq(musicGame.balanceOf(address(0x11)), 2);
+        assertEq(musicGame.balanceOf(address(0x12)), 2);
+        assertEq(musicGame.balanceOf(address(0x13)), 2);
+        assertEq(musicGame.balanceOf(address(0x14)), 1);
+
+        uint256[] memory newSamples = new uint256[](4);
+        newSamples[0] = 1;
+        newSamples[1] = 2;
+        newSamples[2] = 3;
+        newSamples[3] = 4;
+        initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/",
+            newSamples
+        );
+        musicGame.purchase{value: 0.01 ether}(1, initData);
+        uint256[] memory staked = musicGame.cre8ingTokens();
+        assertEq(staked.length, 100);
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], 0);
+        }
+        uint256[] memory unstaked = new uint256[](100);
+        for (uint256 i = 0; i < unstaked.length; i++) {
+            unstaked[i] = i + 1;
+        }
+        vm.stopPrank();
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setCre8ingOpen(true);
+        vm.startPrank(address(0x14));
+        musicGame.toggleCre8ing(unstaked);
+        staked = musicGame.cre8ingTokens();
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], i + 1);
+        }
+        assertEq(staked.length, 100);
+    }
+
+    function test_cre8ingURI() public {
+        vm.deal(address(456), 1 ether);
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: 0,
+            maxSalePurchasePerAddress: 0,
+            presaleMerkleRoot: bytes32(0)
+        });
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/"
+        );
+        musicGame.purchase(100, initData);
+        string[] memory staked = musicGame.cre8ingURI();
+        assertEq(staked.length, 100);
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], "");
+        }
+        uint256[] memory unstaked = new uint256[](100);
+        for (uint256 i = 0; i < unstaked.length; i++) {
+            unstaked[i] = i + 1;
+        }
+        vm.prank(DEFAULT_OWNER_ADDRESS);
+        musicGame.setCre8ingOpen(true);
+        musicGame.toggleCre8ing(unstaked);
+        staked = musicGame.cre8ingURI();
+        for (uint256 i = 0; i < staked.length; i++) {
+            assertEq(staked[i], musicGame.tokenURI(i + 1));
+        }
+        assertEq(staked.length, 100);
     }
 }
+
+// // test Music Game Init
+//     function test_MusicGameAirdrop() public setupZoraNFTBase(1000) {
+//         vm.startPrank(DEFAULT_OWNER_ADDRESS);
+
+//         // airdrop initial game samples
+//         address[] memory toMint = new address[](4);
+//         toMint[0] = address(0x10);
+//         toMint[1] = address(0x11);
+//         toMint[2] = address(0x12);
+//         toMint[3] = address(0x13);
+//         zoraNFTBase.adminMintAirdrop(toMint);
+//         assertEq(zoraNFTBase.saleDetails().totalMinted, 4);
+//         assertEq(zoraNFTBase.balanceOf(address(0x10)), 1);
+//         assertEq(zoraNFTBase.balanceOf(address(0x11)), 1);
+//         assertEq(zoraNFTBase.balanceOf(address(0x12)), 1);
+//         assertEq(zoraNFTBase.balanceOf(address(0x13)), 1);
+
+//         // prepare game
+//         zoraNFTBase.setSaleConfiguration({

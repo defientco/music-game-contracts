@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.15;
 
 import {IMetadataRenderer} from "../interfaces/IMetadataRenderer.sol";
 import {IERC721Drop} from "../interfaces/IERC721Drop.sol";
