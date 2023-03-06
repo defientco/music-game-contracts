@@ -29,6 +29,7 @@ contract ERC721MusicGameTest is DSTest {
     ERC721MusicGame musicGame;
     ChillToken ct;
     MockUser mockUser;
+    uint256[] samples;
     Vm public constant vm = Vm(HEVM_ADDRESS);
     DummyMetadataRenderer public dummyRenderer = new DummyMetadataRenderer();
     MusicGameMetadataRenderer public musicGameRenderer =
@@ -99,6 +100,7 @@ contract ERC721MusicGameTest is DSTest {
             })
         });
         ct = new ChillToken(address(1));
+        samples.push(1);
         vm.prank(address(1));
         ct.mint(address(1), type(uint64).max);
     }
@@ -149,10 +151,12 @@ contract ERC721MusicGameTest is DSTest {
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
 
         musicGame.purchase{value: amount}(1, initData);
@@ -193,10 +197,12 @@ contract ERC721MusicGameTest is DSTest {
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "Description for metadata",
             "https://example.com/image.png",
-            "https://example.com/animation.mp4"
+            "https://example.com/animation.mp4",
+            initSamples
         );
 
         musicGame.purchase{value: amount}(1, initData);
@@ -210,7 +216,8 @@ contract ERC721MusicGameTest is DSTest {
         initData = abi.encode(
             "Description for metadata2",
             "https://example.com/image2.png",
-            "https://example.com/animation2.mp4"
+            "https://example.com/animation2.mp4",
+            samples
         );
 
         musicGame.purchase{value: amount}(1, initData);
@@ -241,10 +248,12 @@ contract ERC721MusicGameTest is DSTest {
 
         vm.deal(address(456), uint256(amount) * 2);
         vm.prank(address(456));
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         if (amount > 0) {
             vm.expectRevert("ERC20: insufficient allowance");
@@ -281,10 +290,12 @@ contract ERC721MusicGameTest is DSTest {
         ct.approve(address(musicGame), type(uint256).max);
         vm.prank(address(1));
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         musicGame.purchase(1, initData);
         require(
@@ -316,10 +327,12 @@ contract ERC721MusicGameTest is DSTest {
 
         assertTrue(!musicGame.saleDetails().publicSaleActive);
 
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
 
         vm.deal(address(456), 1 ether);
@@ -368,9 +381,12 @@ contract ERC721MusicGameTest is DSTest {
 
     function test_MintWrongValue() public setupZoraNFTBase(10) {
         vm.deal(address(456), 1 ether);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
+            "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         vm.prank(address(456));
         vm.expectRevert(IERC721Drop.Sale_Inactive.selector);
@@ -489,10 +505,12 @@ contract ERC721MusicGameTest is DSTest {
             presaleMerkleRoot: bytes32(0),
             maxSalePurchasePerAddress: 10
         });
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         musicGame.purchase{value: 0.6 ether}(3, initData);
         vm.prank(DEFAULT_OWNER_ADDRESS);
@@ -630,7 +648,6 @@ contract ERC721MusicGameTest is DSTest {
     }
 
     // Add test burn failure state for users that don't own the token
-
     function test_EIP165() public view {
         require(musicGame.supportsInterface(0x01ffc9a7), "supports 165");
         // TODO: get these passing with non-upgradeable interface
@@ -655,33 +672,55 @@ contract ERC721MusicGameTest is DSTest {
             publicSaleEnd: type(uint64).max,
             presaleStart: 0,
             presaleEnd: 0,
-            publicSalePrice: 0,
-            maxSalePurchasePerAddress: 0,
+            publicSalePrice: 0.01 ether,
+            maxSalePurchasePerAddress: 2,
             presaleMerkleRoot: bytes32(0)
         });
+
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
-        musicGame.purchase(100, initData);
+        vm.stopPrank();
+        vm.startPrank(address(0x14));
+        vm.deal(address(0x14), 1 ether);
+        musicGame.purchase{value: 0.01 ether}(1, initData);
+
+        uint256[] memory newSamples = new uint256[](4);
+        newSamples[0] = 1;
+        newSamples[1] = 2;
+        newSamples[2] = 3;
+        newSamples[3] = 4;
+        initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/",
+            newSamples
+        );
+        musicGame.purchase{value: 0.01 ether}(1, initData);
+
         uint256[] memory staked = musicGame.cre8ingTokens();
-        assertEq(staked.length, 100);
+        assertEq(staked.length, 6);
         for (uint256 i = 0; i < staked.length; i++) {
             assertEq(staked[i], 0);
         }
-        uint256[] memory unstaked = new uint256[](100);
+        uint256[] memory unstaked = new uint256[](6);
         for (uint256 i = 0; i < unstaked.length; i++) {
             unstaked[i] = i + 1;
         }
+        vm.stopPrank();
         vm.prank(DEFAULT_OWNER_ADDRESS);
         musicGame.setCre8ingOpen(true);
+        vm.startPrank(address(0x14));
         musicGame.toggleCre8ing(unstaked);
         staked = musicGame.cre8ingTokens();
         for (uint256 i = 0; i < staked.length; i++) {
             assertEq(staked[i], i + 1);
         }
-        assertEq(staked.length, 100);
+        assertEq(staked.length, 6);
     }
 
     function test_cre8ingURI() public {
@@ -697,10 +736,12 @@ contract ERC721MusicGameTest is DSTest {
             maxSalePurchasePerAddress: 0,
             presaleMerkleRoot: bytes32(0)
         });
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         musicGame.purchase(100, initData);
         string[] memory staked = musicGame.cre8ingURI();
@@ -720,5 +761,60 @@ contract ERC721MusicGameTest is DSTest {
             assertEq(staked[i], musicGame.tokenURI(i + 1));
         }
         assertEq(staked.length, 100);
+    }
+
+    function test_MusicGameAirdrop() public setupZoraNFTBase(1000) {
+        vm.startPrank(DEFAULT_OWNER_ADDRESS);
+
+        // airdrop initial game samples
+        address[] memory toMint = new address[](4);
+        toMint[0] = address(0x10);
+        toMint[1] = address(0x11);
+        toMint[2] = address(0x12);
+        toMint[3] = address(0x13);
+        musicGame.adminMintAirdrop(toMint);
+        assertEq(musicGame.saleDetails().totalMinted, 4);
+        assertEq(musicGame.balanceOf(address(0x10)), 1);
+        assertEq(musicGame.balanceOf(address(0x11)), 1);
+        assertEq(musicGame.balanceOf(address(0x12)), 1);
+        assertEq(musicGame.balanceOf(address(0x13)), 1);
+
+        // prepare game
+        musicGame.setSaleConfiguration({
+            erc20PaymentToken: address(0),
+            publicSaleStart: 0,
+            publicSaleEnd: type(uint64).max,
+            presaleStart: 0,
+            presaleEnd: 0,
+            publicSalePrice: 0.01 ether,
+            maxSalePurchasePerAddress: 2,
+            presaleMerkleRoot: bytes32(0)
+        });
+
+        uint256[] memory initSamples = new uint256[](4);
+        initSamples[0] = 1;
+        initSamples[1] = 2;
+        initSamples[2] = 3;
+        initSamples[3] = 4;
+
+        // metadata for new mix
+        bytes memory initData = abi.encode(
+            "",
+            "http://imgUri/",
+            "http://animationUri/",
+            initSamples
+        );
+        vm.stopPrank();
+        vm.startPrank(address(0x14));
+        vm.deal(address(0x14), 0.01 ether);
+        musicGame.purchase{value: 0.01 ether}(1, initData);
+
+        // verify airdrop for sample holders
+        assertEq(musicGame.saleDetails().totalMinted, 9);
+        assertEq(musicGame.balanceOf(address(0x10)), 2);
+        assertEq(musicGame.balanceOf(address(0x11)), 2);
+        assertEq(musicGame.balanceOf(address(0x12)), 2);
+        assertEq(musicGame.balanceOf(address(0x13)), 2);
+        assertEq(musicGame.balanceOf(address(0x14)), 1);
     }
 }

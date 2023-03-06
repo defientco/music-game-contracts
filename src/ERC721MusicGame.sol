@@ -330,6 +330,12 @@ contract ERC721MusicGame is
         uint256 salePrice = salesConfig.publicSalePrice;
         address erc20PaymentToken = salesConfig.erc20PaymentToken;
         address fundsRecipient = config.fundsRecipient;
+        (
+            string memory description,
+            string memory imageURI,
+            string memory animationURI,
+            uint256[] memory samples
+        ) = abi.decode(initialData, (string, string, string, uint256[]));
 
         if (erc20PaymentToken == address(0)) {
             if (msg.value != salePrice * quantity) {
@@ -355,23 +361,23 @@ contract ERC721MusicGame is
             revert Purchase_TooManyForAddress();
         }
 
+        // airdrop mix to sample holders
+        sampleAidrop(samples);
+        uint256 firstMintedTokenId = _lastMintedTokenId() - samples.length;
+
         _mintNFTs(_msgSender(), quantity);
-        uint256 firstMintedTokenId = _lastMintedTokenId() - quantity;
 
         // Set metadata for music game
         // data format: description, imageURI, animationURI, tokenId
-        (
-            string memory description,
-            string memory imageURI,
-            string memory animationURI
-        ) = abi.decode(initialData, (string, string, string));
-        bytes memory data = abi.encode(
-            description,
-            imageURI,
-            animationURI,
-            _lastMintedTokenId()
-        );
-        config.metadataRenderer.initializeWithData(data);
+        for (uint256 i = firstMintedTokenId; i <= _lastMintedTokenId(); i++) {
+            bytes memory data = abi.encode(
+                description,
+                imageURI,
+                animationURI,
+                i
+            );
+            config.metadataRenderer.initializeWithData(data);
+        }
 
         emit IERC721Drop.Sale({
             to: _msgSender(),
@@ -638,6 +644,17 @@ contract ERC721MusicGame is
             }
         }
         return _lastMintedTokenId();
+    }
+
+    /// @dev airdrop mix to sample owners
+    /// @param samples array of tokenIds sampled in mix
+    function sampleAidrop(uint256[] memory samples) internal {
+        if (!_exists(1)) return;
+        for (uint256 i; i < samples.length; i++) {
+            address recipient = ownerOf(samples[i]);
+            if (!_exists(samples[i])) revert OwnerQueryForNonexistentToken();
+            _mintNFTs(recipient, 1);
+        }
     }
 
     /**

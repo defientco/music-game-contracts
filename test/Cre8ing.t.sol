@@ -107,10 +107,12 @@ contract Cre8ingTest is Test {
         assertTrue(!cre8ing);
         assertEq(current, 0);
         assertEq(total, 0);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
         uint256[] memory tokenIds = new uint256[](1);
@@ -126,10 +128,12 @@ contract Cre8ingTest is Test {
         assertTrue(!cre8ing);
         assertEq(current, 0);
         assertEq(total, 0);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -150,10 +154,13 @@ contract Cre8ingTest is Test {
     function test_blockCre8ingTransfer() public setupERC721MusicGameNFTBase {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
+        // metadata for new mix
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -178,10 +185,12 @@ contract Cre8ingTest is Test {
     {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -215,10 +224,12 @@ contract Cre8ingTest is Test {
     {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -252,10 +263,12 @@ contract Cre8ingTest is Test {
     {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -277,10 +290,12 @@ contract Cre8ingTest is Test {
     {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
@@ -312,10 +327,12 @@ contract Cre8ingTest is Test {
     function test_expelFromWarehouse() public setupERC721MusicGameNFTBase {
         uint256 _tokenId = 1;
         vm.prank(DEFAULT_CRE8OR_ADDRESS);
+        uint256[] memory initSamples = new uint256[](0);
         bytes memory initData = abi.encode(
             "",
             "http://imgUri/",
-            "http://animationUri/"
+            "http://animationUri/",
+            initSamples
         );
         ERC721MusicGameNFTBase.purchase(1, initData);
 
